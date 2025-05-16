@@ -1,0 +1,20 @@
+[package]
+name = "superhasher"
+version = "0.1.0"
+edition = "2024"
+
+[profile.release]
+debug = true
+strip = false
+
+[features]
+dhat-heap = [] # if you are doing heap profiling
+
+[dependencies]
+dhat = "0.3.3"
+hashbrown = "0.15.3"
+indexmap = "2.9.0"
+itertools = "0.14.0"
+once_cell = "1.21.3"
+parking_lot = "0.12.3"
+ron = "0.10.1"
