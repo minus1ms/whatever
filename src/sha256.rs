@@ -182,13 +182,6 @@ fn padding_compression_loop(h: &mut [u32; 8]) {
         let maj_ = maj(a, b, c);
         let t2_2 = t2_1.wrapping_add(maj_);
         h_temp = g;
-        // if i == 15 {
-        //     println!("{} {}", h_temp, {
-        //         let t1 = t1_4;
-        //         todo!()
-        //     });
-        //     todo!();
-        // }
         // old_h_temp equation:
         // t1_4
         // .wrapping_sub(w[i])
@@ -198,11 +191,17 @@ fn padding_compression_loop(h: &mut [u32; 8]) {
         g = f;
         f = e;
         e = d.wrapping_add(t1_4);
+        // if i == 19 {
+        //      let t1 = t1_4;
+        //     println!("{} {}", d, {
+        //         todo!()
+        //     });
+        //     todo!();
+        // }
         d = c;
         c = b;
         b = a;
         a = t1_4.wrapping_add(t2_2);
-        
         // todo!();
         // let t2 = big_sigma0(b).wrapping_add(maj(b, c, d));
         // get t1 from above a = operation

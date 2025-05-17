@@ -1,6 +1,7 @@
 use std::{
     backtrace::Backtrace,
     fmt::{self, Display, Formatter},
+    rc::Rc,
 };
 
 use hashbrown::HashMap;
@@ -16,9 +17,9 @@ use crate::{
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum EvaluatedRevVal {
-    Context(Box<EvaluatedContextVal>),
+    Context(EvaluatedContextVal),
     Const(u32),
-    Operation(Box<EvaluatedOperation>),
+    Operation(EvaluatedOperation),
 
     /// New: reference into the variable map produced by `factorise`.
     VarRef(String),
@@ -30,27 +31,27 @@ impl EvaluatedRevVal {
         cache: &mut HashMap<EvaluatedRevVal, AbstractVal>,
         context: &Context,
     ) -> AbstractVal {
-        if let Some(cached) = cache.get(self) {
-            return cached.clone();
-        }
+        // if let Some(cached) = cache.get(self) {
+        //     return cached.clone();
+        // }
         let res = match self {
             EvaluatedRevVal::Context(context_val) => context_val.evaluate(cache, context),
             EvaluatedRevVal::Const(x) => AbstractVal::U32(*x),
             EvaluatedRevVal::Operation(operation) => operation.evaluate(cache, context),
             EvaluatedRevVal::VarRef(_) => todo!(),
         };
-        cache.insert(self.clone(), res.clone());
+        // cache.insert(self.clone(), res.clone());
         res
     }
 
-    pub fn create_lazy(arg: &LazyRevVal) -> Self {
+    pub fn create_lazy(arg: &LazyRevVal) -> Rc<Self> {
         match arg {
             LazyRevVal::Ref(rev_val) => Self::create(rev_val),
             LazyRevVal::Mapping { inner, mapping } => Self::create_lazy_mapped(inner, mapping),
         }
     }
 
-    fn create_lazy_mapped(val: &LazyRevVal, mapping: &Mapping) -> Self {
+    fn create_lazy_mapped(val: &LazyRevVal, mapping: &Mapping) -> Rc<Self> {
         match val {
             LazyRevVal::Ref(rev_val) => Self::create_mapped(rev_val, mapping),
             LazyRevVal::Mapping {
@@ -60,28 +61,28 @@ impl EvaluatedRevVal {
         }
     }
 
-    pub fn create(arg: &RevVal) -> Self {
+    pub fn create(arg: &RevVal) -> Rc<Self> {
         match arg {
             RevVal::Output => todo!(),
             RevVal::Input(_) => todo!(),
             RevVal::Context(context_val) => EvaluatedContextVal::create(context_val),
-            RevVal::Const(x) => Self::Const(*x),
+            RevVal::Const(x) => Self::Const(*x).into(),
             RevVal::Operation(operation) => {
-                Self::Operation(EvaluatedOperation::create(operation).into())
+                Self::Operation(EvaluatedOperation::create(operation).into()).into()
             }
         }
     }
 
-    fn create_mapped(val: &RevVal, mapping: &Mapping) -> Self {
+    fn create_mapped(val: &RevVal, mapping: &Mapping) -> Rc<Self> {
         match val {
             RevVal::Output => todo!(),
             RevVal::Input(_) => todo!(),
             RevVal::Context(context_val) => {
                 EvaluatedContextVal::create_mapped(context_val, mapping)
             }
-            RevVal::Const(x) => Self::Const(*x),
+            RevVal::Const(x) => Self::Const(*x).into(),
             RevVal::Operation(operation) => {
-                Self::Operation(EvaluatedOperation::create_mapped(operation, mapping).into())
+                Self::Operation(EvaluatedOperation::create_mapped(operation, mapping).into()).into()
             }
         }
     }
@@ -89,14 +90,22 @@ impl EvaluatedRevVal {
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum EvaluatedOperation {
-    BigSigma0(EvaluatedRevVal),
-    BigSigma1(EvaluatedRevVal),
-    Xor(EvaluatedRevVal, EvaluatedRevVal),
-    And(EvaluatedRevVal, EvaluatedRevVal),
-    WAdd(EvaluatedRevVal, EvaluatedRevVal),
-    WSub(EvaluatedRevVal, EvaluatedRevVal),
-    Maj(EvaluatedRevVal, EvaluatedRevVal, EvaluatedRevVal),
-    Ch(EvaluatedRevVal, EvaluatedRevVal, EvaluatedRevVal),
+    BigSigma0(Rc<EvaluatedRevVal>),
+    BigSigma1(Rc<EvaluatedRevVal>),
+    Xor(Rc<EvaluatedRevVal>, Rc<EvaluatedRevVal>),
+    And(Rc<EvaluatedRevVal>, Rc<EvaluatedRevVal>),
+    WAdd(Rc<EvaluatedRevVal>, Rc<EvaluatedRevVal>),
+    WSub(Rc<EvaluatedRevVal>, Rc<EvaluatedRevVal>),
+    Maj(
+        Rc<EvaluatedRevVal>,
+        Rc<EvaluatedRevVal>,
+        Rc<EvaluatedRevVal>,
+    ),
+    Ch(
+        Rc<EvaluatedRevVal>,
+        Rc<EvaluatedRevVal>,
+        Rc<EvaluatedRevVal>,
+    ),
 }
 
 impl EvaluatedOperation {
@@ -204,7 +213,7 @@ impl EvaluatedOperation {
 pub enum EvaluatedContextVal {
     Name(&'static str),
     Array(&'static str, usize),
-    ArrayCtx(&'static str, EvaluatedRevVal),
+    ArrayCtx(&'static str, Rc<EvaluatedRevVal>),
 }
 
 impl EvaluatedContextVal {
@@ -239,20 +248,20 @@ impl EvaluatedContextVal {
     }
 
     // we return that because we can map out the entire value
-    fn create_mapped(context_val: &ContextVal, mapping: &Mapping) -> EvaluatedRevVal {
+    fn create_mapped(context_val: &ContextVal, mapping: &Mapping) -> Rc<EvaluatedRevVal> {
         match context_val {
             ContextVal::Name(x) => {
                 if let Some(val) = mapping.apply(x) {
                     EvaluatedRevVal::create_lazy(&val)
                 } else {
-                    EvaluatedRevVal::Context(Self::Name(x).into())
+                    EvaluatedRevVal::Context(Self::Name(x).into()).into()
                 }
             }
             ContextVal::Array(x, i) => {
                 if let Some(val) = mapping.apply(x) {
                     todo!()
                 } else {
-                    EvaluatedRevVal::Context(Self::Array(x, *i).into())
+                    EvaluatedRevVal::Context(Self::Array(x, *i).into()).into()
                 }
             }
             ContextVal::ArrayCtx(x, lazy_rev_val) => {
@@ -266,17 +275,18 @@ impl EvaluatedContextVal {
                         )
                         .into(),
                     )
+                    .into()
                 }
             }
         }
     }
 
-    fn create(context_val: &ContextVal) -> EvaluatedRevVal {
+    fn create(context_val: &ContextVal) -> Rc<EvaluatedRevVal> {
         match context_val {
-            ContextVal::Name(x) => EvaluatedRevVal::Context(Self::Name(x).into()),
-            ContextVal::Array(x, i) => EvaluatedRevVal::Context(Self::Array(x, *i).into()),
+            ContextVal::Name(x) => EvaluatedRevVal::Context(Self::Name(x).into()).into(),
+            ContextVal::Array(x, i) => EvaluatedRevVal::Context(Self::Array(x, *i).into()).into(),
             ContextVal::ArrayCtx(x, val) => {
-                EvaluatedRevVal::Context(Self::ArrayCtx(x, val.into_evaluated()).into())
+                EvaluatedRevVal::Context(Self::ArrayCtx(x, val.into_evaluated()).into()).into()
             }
         }
     }
@@ -285,12 +295,14 @@ impl EvaluatedContextVal {
 /// Public helper -----------------------------------------------------------
 ///
 /// Returns the rewritten expression and a Vec of `(var_name, definition)`.
-pub fn factorise(root: EvaluatedRevVal) -> (EvaluatedRevVal, Vec<(String, EvaluatedRevVal)>) {
-    let mut counts = HashMap::<EvaluatedRevVal, usize>::new();
-    collect_counts(&root, &mut counts);
+pub fn factorise(
+    root: Rc<EvaluatedRevVal>,
+) -> (Rc<EvaluatedRevVal>, Vec<(String, Rc<EvaluatedRevVal>)>) {
+    let mut counts = HashMap::<Rc<EvaluatedRevVal>, usize>::new();
+    collect_counts(root.clone(), &mut counts);
 
-    let mut mapping = HashMap::<EvaluatedRevVal, String>::new();
-    let mut defs = Vec::<(String, EvaluatedRevVal)>::new();
+    let mut mapping = HashMap::<Rc<EvaluatedRevVal>, String>::new();
+    let mut defs = Vec::<(String, Rc<EvaluatedRevVal>)>::new();
     let mut counter = 0_usize;
 
     let rewritten = replace_repeats(root, &counts, &mut mapping, &mut defs, &mut counter);
@@ -299,28 +311,28 @@ pub fn factorise(root: EvaluatedRevVal) -> (EvaluatedRevVal, Vec<(String, Evalua
 }
 
 /// Pass-1: tally every subtree. --------------------------------------------
-fn collect_counts(val: &EvaluatedRevVal, acc: &mut HashMap<EvaluatedRevVal, usize>) {
+fn collect_counts(val: Rc<EvaluatedRevVal>, acc: &mut HashMap<Rc<EvaluatedRevVal>, usize>) {
     *acc.entry(val.clone()).or_insert(0) += 1;
 
-    match val {
-        EvaluatedRevVal::Context(box EvaluatedContextVal::ArrayCtx(_, inner)) => {
-            collect_counts(inner, acc);
+    match val.as_ref() {
+        EvaluatedRevVal::Context(EvaluatedContextVal::ArrayCtx(_, inner)) => {
+            collect_counts(inner.clone(), acc);
         }
-        EvaluatedRevVal::Operation(op) => match &**op {
+        EvaluatedRevVal::Operation(op) => match op {
             EvaluatedOperation::BigSigma0(a) | EvaluatedOperation::BigSigma1(a) => {
-                collect_counts(a, acc);
+                collect_counts(a.clone(), acc);
             }
             EvaluatedOperation::Xor(a, b)
             | EvaluatedOperation::And(a, b)
             | EvaluatedOperation::WAdd(a, b)
             | EvaluatedOperation::WSub(a, b) => {
-                collect_counts(a, acc);
-                collect_counts(b, acc);
+                collect_counts(a.clone(), acc);
+                collect_counts(b.clone(), acc);
             }
             EvaluatedOperation::Maj(a, b, c) | EvaluatedOperation::Ch(a, b, c) => {
-                collect_counts(a, acc);
-                collect_counts(b, acc);
-                collect_counts(c, acc);
+                collect_counts(a.clone(), acc);
+                collect_counts(b.clone(), acc);
+                collect_counts(c.clone(), acc);
             }
         },
         _ => {}
@@ -331,9 +343,7 @@ fn collect_counts(val: &EvaluatedRevVal, acc: &mut HashMap<EvaluatedRevVal, usiz
 fn candidate(val: &EvaluatedRevVal) -> bool {
     match val {
         // Plain context name is atomic – leave it inline.
-        EvaluatedRevVal::Context(box EvaluatedContextVal::Name(_)) | EvaluatedRevVal::Const(_) => {
-            false
-        }
+        EvaluatedRevVal::Context(EvaluatedContextVal::Name(_)) | EvaluatedRevVal::Const(_) => false,
         // Everything else is fair game.
         _ => true,
     }
@@ -341,12 +351,12 @@ fn candidate(val: &EvaluatedRevVal) -> bool {
 
 /// Pass-2: build new tree, hoisting repeats into `VarRef`. ------------------
 fn replace_repeats(
-    val: EvaluatedRevVal,
-    counts: &HashMap<EvaluatedRevVal, usize>,
-    mapping: &mut HashMap<EvaluatedRevVal, String>,
-    defs: &mut Vec<(String, EvaluatedRevVal)>,
+    val: Rc<EvaluatedRevVal>,
+    counts: &HashMap<Rc<EvaluatedRevVal>, usize>,
+    mapping: &mut HashMap<Rc<EvaluatedRevVal>, String>,
+    defs: &mut Vec<(String, Rc<EvaluatedRevVal>)>,
     counter: &mut usize,
-) -> EvaluatedRevVal {
+) -> Rc<EvaluatedRevVal> {
     // Do we *want* a variable for this exact subtree?
     let need_var = candidate(&val) && counts.get(&val).copied().unwrap_or(0) > 1;
     // if need_var {
@@ -360,7 +370,7 @@ fn replace_repeats(
     if need_var {
         // Already have one?
         if let Some(name) = mapping.get(&val) {
-            return EvaluatedRevVal::VarRef(name.clone());
+            return EvaluatedRevVal::VarRef(name.clone()).into();
         }
 
         // Create a fresh variable and *then* recurse so that the
@@ -377,7 +387,7 @@ fn replace_repeats(
         });
 
         defs.push((var_name.clone(), transformed_def.clone()));
-        EvaluatedRevVal::VarRef(var_name)
+        EvaluatedRevVal::VarRef(var_name).into()
     } else {
         // Not hoisted – just rebuild with transformed children.
         box_children(val, |child| {
@@ -387,29 +397,41 @@ fn replace_repeats(
 }
 
 /// Helper: rebuild an expression after transforming each child. ------------
-fn box_children<F>(val: EvaluatedRevVal, mut f: F) -> EvaluatedRevVal
+fn box_children<F>(val: Rc<EvaluatedRevVal>, mut f: F) -> Rc<EvaluatedRevVal>
 where
-    F: FnMut(EvaluatedRevVal) -> EvaluatedRevVal,
+    F: FnMut(Rc<EvaluatedRevVal>) -> Rc<EvaluatedRevVal>,
 {
-    match val {
+    match val.as_ref() {
         EvaluatedRevVal::Operation(op) => {
-            let new_op = match *op {
-                EvaluatedOperation::BigSigma0(a) => EvaluatedOperation::BigSigma0(f(a)),
-                EvaluatedOperation::BigSigma1(a) => EvaluatedOperation::BigSigma1(f(a)),
-                EvaluatedOperation::Xor(a, b) => EvaluatedOperation::Xor(f(a), f(b)),
-                EvaluatedOperation::And(a, b) => EvaluatedOperation::And(f(a), f(b)),
-                EvaluatedOperation::WAdd(a, b) => EvaluatedOperation::WAdd(f(a), f(b)),
-                EvaluatedOperation::WSub(a, b) => EvaluatedOperation::WSub(f(a), f(b)),
-                EvaluatedOperation::Maj(a, b, c) => EvaluatedOperation::Maj(f(a), f(b), f(c)),
-                EvaluatedOperation::Ch(a, b, c) => EvaluatedOperation::Ch(f(a), f(b), f(c)),
+            let new_op = match op {
+                EvaluatedOperation::BigSigma0(a) => EvaluatedOperation::BigSigma0(f(a.clone())),
+                EvaluatedOperation::BigSigma1(a) => EvaluatedOperation::BigSigma1(f(a.clone())),
+                EvaluatedOperation::Xor(a, b) => {
+                    EvaluatedOperation::Xor(f(a.clone()), f(b.clone()))
+                }
+                EvaluatedOperation::And(a, b) => {
+                    EvaluatedOperation::And(f(a.clone()), f(b.clone()))
+                }
+                EvaluatedOperation::WAdd(a, b) => {
+                    EvaluatedOperation::WAdd(f(a.clone()), f(b.clone()))
+                }
+                EvaluatedOperation::WSub(a, b) => {
+                    EvaluatedOperation::WSub(f(a.clone()), f(b.clone()))
+                }
+                EvaluatedOperation::Maj(a, b, c) => {
+                    EvaluatedOperation::Maj(f(a.clone()), f(b.clone()), f(c.clone()))
+                }
+                EvaluatedOperation::Ch(a, b, c) => {
+                    EvaluatedOperation::Ch(f(a.clone()), f(b.clone()), f(c.clone()))
+                }
             };
-            EvaluatedRevVal::Operation(Box::new(new_op))
+            EvaluatedRevVal::Operation(new_op).into()
         }
-        EvaluatedRevVal::Context(box EvaluatedContextVal::ArrayCtx(name, inner)) => {
-            EvaluatedRevVal::Context(Box::new(EvaluatedContextVal::ArrayCtx(name, f(inner))))
+        EvaluatedRevVal::Context(EvaluatedContextVal::ArrayCtx(name, inner)) => {
+            EvaluatedRevVal::Context(EvaluatedContextVal::ArrayCtx(name, f(inner.clone()))).into()
         }
         // Leaf nodes or VarRef – nothing to transform.
-        leaf => leaf,
+        _ => val,
     }
 }
 

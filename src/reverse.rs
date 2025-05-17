@@ -1,4 +1,6 @@
-use std::{collections::HashMap, fmt::Debug};
+use std::fmt::Debug;
+
+use hashbrown::HashMap;
 
 use crate::{
     constraint::{Constraint, ConstraintId, Constraints, ConstraintsHolder, ContextVal, RevVal},
@@ -167,15 +169,15 @@ impl PossibleStep {
                     Context::new(vec![
                         (
                             "K",
-                            AbstractVal::Arr(K.iter().map(|x| x.clone().into()).collect()),
+                            AbstractVal::Arr(K.iter().map(|x| AbstractVal::U32(*x)).collect()),
                         ),
                         (
                             "w",
-                            AbstractVal::Arr(w.iter().map(|x| x.clone().into()).collect()),
+                            AbstractVal::Arr(w.iter().map(|x| AbstractVal::U32(*x)).collect()),
                         ),
                         (
                             "h",
-                            AbstractVal::Arr(h.iter().map(|x| x.clone().into()).collect()),
+                            AbstractVal::Arr(h.iter().map(|x| AbstractVal::U32(*x)).collect()),
                         ),
                         ("a", a.into()),
                         ("b", b.into()),
@@ -200,15 +202,15 @@ impl PossibleStep {
                     Context::new(vec![
                         (
                             "h".into(),
-                            AbstractVal::Arr(h.iter().map(|x| x.clone().into()).collect()),
+                            AbstractVal::Arr(h.iter().map(|x| AbstractVal::U32(*x)).collect()),
                         ),
                         (
                             "w".into(),
-                            AbstractVal::Arr(w.iter().map(|x| x.clone().into()).collect()),
+                            AbstractVal::Arr(w.iter().map(|x| AbstractVal::U32(*x)).collect()),
                         ),
                         (
                             "K".into(),
-                            AbstractVal::Arr(K.iter().map(|x| x.clone().into()).collect()),
+                            AbstractVal::Arr(K.iter().map(|x| AbstractVal::U32(*x)).collect()),
                         ),
                         // no `a` should be used ever there, should be always mapped out
                         ("b", b.into()),
@@ -235,15 +237,15 @@ impl PossibleStep {
                     Context::new(vec![
                         (
                             "K".into(),
-                            AbstractVal::Arr(K.iter().map(|x| x.clone().into()).collect()),
+                            AbstractVal::Arr(K.iter().map(|x| AbstractVal::U32(*x)).collect()),
                         ),
                         (
                             "w".into(),
-                            AbstractVal::Arr(w.iter().map(|x| x.clone().into()).collect()),
+                            AbstractVal::Arr(w.iter().map(|x| AbstractVal::U32(*x)).collect()),
                         ),
                         (
                             "h".into(),
-                            AbstractVal::Arr(h.iter().map(|x| x.clone().into()).collect()),
+                            AbstractVal::Arr(h.iter().map(|x| AbstractVal::U32(*x)).collect()),
                         ),
                         ("a", a.into()),
                         // no `b` should be used ever there, should be always mapped out
@@ -271,15 +273,15 @@ impl PossibleStep {
                     Context::new(vec![
                         (
                             "K".into(),
-                            AbstractVal::Arr(K.iter().map(|x| x.clone().into()).collect()),
+                            AbstractVal::Arr(K.iter().map(|x| AbstractVal::U32(*x)).collect()),
                         ),
                         (
                             "w".into(),
-                            AbstractVal::Arr(w.iter().map(|x| x.clone().into()).collect()),
+                            AbstractVal::Arr(w.iter().map(|x| AbstractVal::U32(*x)).collect()),
                         ),
                         (
                             "h".into(),
-                            AbstractVal::Arr(h.iter().map(|x| x.clone().into()).collect()),
+                            AbstractVal::Arr(h.iter().map(|x| AbstractVal::U32(*x)).collect()),
                         ),
                         ("a", a.into()),
                         ("b", b.into()),
@@ -307,15 +309,15 @@ impl PossibleStep {
                     Context::new(vec![
                         (
                             "K".into(),
-                            AbstractVal::Arr(K.iter().map(|x| x.clone().into()).collect()),
+                            AbstractVal::Arr(K.iter().map(|x| AbstractVal::U32(*x)).collect()),
                         ),
                         (
                             "w".into(),
-                            AbstractVal::Arr(w.iter().map(|x| x.clone().into()).collect()),
+                            AbstractVal::Arr(w.iter().map(|x| AbstractVal::U32(*x)).collect()),
                         ),
                         (
                             "h".into(),
-                            AbstractVal::Arr(h.iter().map(|x| x.clone().into()).collect()),
+                            AbstractVal::Arr(h.iter().map(|x| AbstractVal::U32(*x)).collect()),
                         ),
                         ("a", a.into()),
                         ("b", b.into()),
@@ -341,15 +343,15 @@ impl PossibleStep {
                     Context::new(vec![
                         (
                             "K".into(),
-                            AbstractVal::Arr(K.iter().map(|x| x.clone().into()).collect()),
+                            AbstractVal::Arr(K.iter().map(|x| AbstractVal::U32(*x)).collect()),
                         ),
                         (
                             "w".into(),
-                            AbstractVal::Arr(w.iter().map(|x| x.clone().into()).collect()),
+                            AbstractVal::Arr(w.iter().map(|x| AbstractVal::U32(*x)).collect()),
                         ),
                         (
                             "h".into(),
-                            AbstractVal::Arr(h.iter().map(|x| x.clone().into()).collect()),
+                            AbstractVal::Arr(h.iter().map(|x| AbstractVal::U32(*x)).collect()),
                         ),
                         ("a", a.into()),
                         ("b", b.into()),
@@ -375,15 +377,15 @@ impl PossibleStep {
                     Context::new(vec![
                         (
                             "K".into(),
-                            AbstractVal::Arr(K.iter().map(|x| x.clone().into()).collect()),
+                            AbstractVal::Arr(K.iter().map(|x| AbstractVal::U32(*x)).collect()),
                         ),
                         (
                             "w".into(),
-                            AbstractVal::Arr(w.iter().map(|x| x.clone().into()).collect()),
+                            AbstractVal::Arr(w.iter().map(|x| AbstractVal::U32(*x)).collect()),
                         ),
                         (
                             "h".into(),
-                            AbstractVal::Arr(h.iter().map(|x| x.clone().into()).collect()),
+                            AbstractVal::Arr(h.iter().map(|x| AbstractVal::U32(*x)).collect()),
                         ),
                         ("a", a.into()),
                         ("b", b.into()),
@@ -409,15 +411,15 @@ impl PossibleStep {
                     Context::new(vec![
                         (
                             "K".into(),
-                            AbstractVal::Arr(K.iter().map(|x| x.clone().into()).collect()),
+                            AbstractVal::Arr(K.iter().map(|x| AbstractVal::U32(*x)).collect()),
                         ),
                         (
                             "w".into(),
-                            AbstractVal::Arr(w.iter().map(|x| x.clone().into()).collect()),
+                            AbstractVal::Arr(w.iter().map(|x| AbstractVal::U32(*x)).collect()),
                         ),
                         (
                             "h".into(),
-                            AbstractVal::Arr(h.iter().map(|x| x.clone().into()).collect()),
+                            AbstractVal::Arr(h.iter().map(|x| AbstractVal::U32(*x)).collect()),
                         ),
                         ("a", a.into()),
                         ("b", b.into()),
@@ -445,15 +447,15 @@ impl PossibleStep {
                     Context::new(vec![
                         (
                             "K".into(),
-                            AbstractVal::Arr(K.iter().map(|x| x.clone().into()).collect()),
+                            AbstractVal::Arr(K.iter().map(|x| AbstractVal::U32(*x)).collect()),
                         ),
                         (
                             "w".into(),
-                            AbstractVal::Arr(w.iter().map(|x| x.clone().into()).collect()),
+                            AbstractVal::Arr(w.iter().map(|x| AbstractVal::U32(*x)).collect()),
                         ),
                         (
                             "h".into(),
-                            AbstractVal::Arr(h.iter().map(|x| x.clone().into()).collect()),
+                            AbstractVal::Arr(h.iter().map(|x| AbstractVal::U32(*x)).collect()),
                         ),
                         ("i", (i as u32).into()),
                         ("a".into(), a.into()),
@@ -495,15 +497,15 @@ impl PossibleStep {
                     Context::new(vec![
                         (
                             "K".into(),
-                            AbstractVal::Arr(K.iter().map(|x| x.clone().into()).collect()),
+                            AbstractVal::Arr(K.iter().map(|x| AbstractVal::U32(*x)).collect()),
                         ),
                         (
                             "w".into(),
-                            AbstractVal::Arr(w.iter().map(|x| x.clone().into()).collect()),
+                            AbstractVal::Arr(w.iter().map(|x| AbstractVal::U32(*x)).collect()),
                         ),
                         (
                             "h".into(),
-                            AbstractVal::Arr(h.iter().map(|x| x.clone().into()).collect()),
+                            AbstractVal::Arr(h.iter().map(|x| AbstractVal::U32(*x)).collect()),
                         ),
                         ("i", (i as u32).into()),
                         ("a".into(), a.into()),
@@ -531,15 +533,15 @@ impl PossibleStep {
                     Context::new(vec![
                         (
                             "K".into(),
-                            AbstractVal::Arr(K.iter().map(|x| x.clone().into()).collect()),
+                            AbstractVal::Arr(K.iter().map(|x| AbstractVal::U32(*x)).collect()),
                         ),
                         (
                             "w".into(),
-                            AbstractVal::Arr(w.iter().map(|x| x.clone().into()).collect()),
+                            AbstractVal::Arr(w.iter().map(|x| AbstractVal::U32(*x)).collect()),
                         ),
                         (
                             "h".into(),
-                            AbstractVal::Arr(h.iter().map(|x| x.clone().into()).collect()),
+                            AbstractVal::Arr(h.iter().map(|x| AbstractVal::U32(*x)).collect()),
                         ),
                         ("i", (i as u32).into()),
                         ("a".into(), a.into()),
@@ -567,15 +569,15 @@ impl PossibleStep {
                     Context::new(vec![
                         (
                             "K".into(),
-                            AbstractVal::Arr(K.iter().map(|x| x.clone().into()).collect()),
+                            AbstractVal::Arr(K.iter().map(|x| AbstractVal::U32(*x)).collect()),
                         ),
                         (
                             "w".into(),
-                            AbstractVal::Arr(w.iter().map(|x| x.clone().into()).collect()),
+                            AbstractVal::Arr(w.iter().map(|x| AbstractVal::U32(*x)).collect()),
                         ),
                         (
                             "h".into(),
-                            AbstractVal::Arr(h.iter().map(|x| x.clone().into()).collect()),
+                            AbstractVal::Arr(h.iter().map(|x| AbstractVal::U32(*x)).collect()),
                         ),
                         ("i", (i as u32).into()),
                         ("a".into(), a.into()),
@@ -625,15 +627,15 @@ impl PossibleStep {
                         ("h_temp".into(), h_temp.into()),
                         (
                             "K".into(),
-                            AbstractVal::Arr(K.iter().map(|x| x.clone().into()).collect()),
+                            AbstractVal::Arr(K.iter().map(|x| AbstractVal::U32(*x)).collect()),
                         ),
                         (
                             "w".into(),
-                            AbstractVal::Arr(w.iter().map(|x| x.clone().into()).collect()),
+                            AbstractVal::Arr(w.iter().map(|x| AbstractVal::U32(*x)).collect()),
                         ),
                         (
                             "h".into(),
-                            AbstractVal::Arr(h.iter().map(|x| x.clone().into()).collect()),
+                            AbstractVal::Arr(h.iter().map(|x| AbstractVal::U32(*x)).collect()),
                         ),
                         ("i", (i as u32).into()),
                         ("t1".into(), t1.into()),

@@ -1,4 +1,10 @@
-use std::fmt::Display;
+use std::{
+    fmt::Display,
+    fs::{self, File, OpenOptions},
+    io::{BufWriter, Write},
+    process::Command,
+    rc::Rc,
+};
 
 use hashbrown::{HashMap, HashSet};
 use indexmap::IndexMap;
@@ -92,7 +98,16 @@ impl LazyRevVal {
         }
     }
 
-    pub fn into_evaluated(&self) -> EvaluatedRevVal {
+    pub fn append_to_file(&self, file: &mut BufWriter<File>) {
+        match self {
+            LazyRevVal::Ref(rev_val) => write!(file, "{rev_val}").unwrap(),
+            LazyRevVal::Mapping { inner, mapping } => {
+                inner.append_to_file_mapped(file, mapping.clone())
+            }
+        }
+    }
+
+    pub fn into_evaluated(&self) -> Rc<EvaluatedRevVal> {
         EvaluatedRevVal::create_lazy(self)
     }
 
@@ -110,6 +125,19 @@ impl LazyRevVal {
             } => {
                 // we have to map the mappings
                 inner.display_mapped(f, inner_mapping.merge(mapping), cache)
+            }
+        }
+    }
+
+    pub fn append_to_file_mapped(&self, file: &mut BufWriter<File>, mapping: Mapping) {
+        match self {
+            LazyRevVal::Ref(rev_val) => rev_val.append_to_file_mapped(file, mapping),
+            LazyRevVal::Mapping {
+                inner,
+                mapping: inner_mapping,
+            } => {
+                // we have to map the mappings
+                inner.append_to_file_mapped(file, inner_mapping.merge(mapping))
             }
         }
     }

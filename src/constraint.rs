@@ -1,8 +1,15 @@
 use std::{
-    arch::x86_64, backtrace::Backtrace, collections::HashMap, fmt::Display, fs, ops::Deref, rc::Rc,
+    arch::x86_64,
+    backtrace::Backtrace,
+    fmt::Display,
+    fs::{self, File},
+    io::{BufWriter, Write},
+    ops::Deref,
+    rc::Rc,
     sync::Arc,
 };
 
+use hashbrown::HashMap;
 use indexmap::IndexMap;
 use itertools::Itertools;
 use once_cell::sync::Lazy;
@@ -107,6 +114,16 @@ impl RevVal {
             RevVal::Context(val) => val.display_with_mapping(f, mapping, cache),
             RevVal::Const(x) => write!(f, "{x}"),
             RevVal::Operation(operation) => operation.display_mapped(f, mapping, cache),
+        }
+    }
+
+    pub fn append_to_file_mapped(&self, file: &mut BufWriter<File>, mapping: Mapping) {
+        match self {
+            RevVal::Output => todo!(),
+            RevVal::Input(_) => todo!(),
+            RevVal::Context(val) => val.append_to_file_mapped(file, mapping),
+            RevVal::Const(_) => todo!(),
+            RevVal::Operation(operation) => operation.append_to_file_mapped(file, mapping),
         }
     }
 
@@ -334,6 +351,36 @@ impl ContextVal {
         }
     }
 
+    fn append_to_file_mapped(&self, file: &mut BufWriter<File>, mapping: Mapping) {
+        match self {
+            ContextVal::Name(x) => {
+                if let Some(x) = mapping.apply(x) {
+                    x.append_to_file(file);
+                } else {
+                    write!(file, "{x}").unwrap()
+                }
+            }
+            ContextVal::Array(x, i) => {
+                if let Some(x) = mapping.apply(x) {
+                    x.append_to_file(file);
+                } else {
+                    write!(file, "{x}").unwrap()
+                }
+                write!(file, "[{i}]").unwrap()
+            }
+            ContextVal::ArrayCtx(x, val) => {
+                if let Some(x) = mapping.apply(x) {
+                    x.append_to_file(file);
+                } else {
+                    write!(file, "{x}").unwrap()
+                }
+                write!(file, "[").unwrap();
+                val.clone().map_context(mapping).append_to_file(file);
+                write!(file, "]").unwrap();
+            }
+        }
+    }
+
     fn lookup_mapped(
         &self,
         cache: &mut IndexMap<(*const RevVal, Option<Mapping>), usize>,
@@ -501,6 +548,53 @@ impl Operation {
                 write!(f, ", ")?;
                 val3.display_mapped(f, mapping, cache)?;
                 write!(f, ")")
+            }
+        }
+    }
+
+    pub fn append_to_file_mapped(&self, file: &mut BufWriter<File>, mapping: Mapping) {
+        match self {
+            Operation::BigSigma0(val) => {
+                write!(file, "big_sigma0(").unwrap();
+                val.append_to_file_mapped(file, mapping);
+                write!(file, ")").unwrap();
+            }
+            Operation::BigSigma1(val) => {
+                write!(file, "big_sigma1(").unwrap();
+                val.append_to_file_mapped(file, mapping);
+                write!(file, ")").unwrap();
+            }
+            Operation::Xor(val1, val2) => todo!(),
+            Operation::And(val1, val2) => todo!(),
+            Operation::WAdd(val1, val2) => {
+                val1.append_to_file_mapped(file, mapping.clone());
+                write!(file, ".wrapping_add(").unwrap();
+                val2.append_to_file_mapped(file, mapping);
+                write!(file, ")").unwrap();
+            }
+            Operation::WSub(val1, val2) => {
+                val1.append_to_file_mapped(file, mapping.clone());
+                write!(file, ".wrapping_sub(").unwrap();
+                val2.append_to_file_mapped(file, mapping);
+                write!(file, ")").unwrap();
+            }
+            Operation::Maj(val1, val2, val3) => {
+                write!(file, "maj(").unwrap();
+                val1.append_to_file_mapped(file, mapping.clone());
+                write!(file, ", ").unwrap();
+                val2.append_to_file_mapped(file, mapping.clone());
+                write!(file, ", ").unwrap();
+                val3.append_to_file_mapped(file, mapping);
+                write!(file, ")").unwrap()
+            }
+            Operation::Ch(val1, val2, val3) => {
+                write!(file, "ch(").unwrap();
+                val1.append_to_file_mapped(file, mapping.clone());
+                write!(file, ", ").unwrap();
+                val2.append_to_file_mapped(file, mapping.clone());
+                write!(file, ", ").unwrap();
+                val3.append_to_file_mapped(file, mapping);
+                write!(file, ")").unwrap()
             }
         }
     }

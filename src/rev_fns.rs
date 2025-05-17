@@ -387,6 +387,13 @@ pub fn rev_assignment(
                                 ("h_temp", old_h_temp),
                                 ("t1", prev_iter_t1),
                             ]);
+                            unsafe {
+                                if COUNTER == 2 {
+                                    // println!("{constraint}");
+                                    std::process::exit(0);
+                                }
+                                COUNTER += 1;
+                            }
                             x.w_add2.to_w_add().constraints.push(constraint);
                             return RevRes::ConstraintsChanged(id);
                         }
@@ -582,13 +589,6 @@ pub fn rev_assignment(
                                 ("h_temp", old_h_temp),
                                 ("t1", prev_iter_t1),
                             ]);
-                            unsafe {
-                                if COUNTER == 1 {
-                                    // println!("{constraint}");
-                                    std::process::exit(0);
-                                }
-                                COUNTER += 1;
-                            }
                             x.w_add7.to_w_add().constraints.push(constraint);
                             return RevRes::ConstraintsChanged(id);
                         }

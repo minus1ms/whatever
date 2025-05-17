@@ -5,7 +5,6 @@ use reverse::RevProc;
 mod constraint;
 mod evaluated;
 mod helper;
-mod map_prototype;
 mod mapping;
 mod rev_fns;
 mod rev_val_holder;

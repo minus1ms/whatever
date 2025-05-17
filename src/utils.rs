@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use crate::{
     constraint::ConstraintId,
     sha256::{big_sigma0, big_sigma1},
@@ -19,6 +21,22 @@ impl<T> From<T> for RevRes<T> {
 pub enum AbstractVal {
     U32(u32),
     Arr(Vec<AbstractVal>),
+}
+
+impl Display for AbstractVal {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            AbstractVal::U32(x) => write!(f, "{x}u32"),
+            AbstractVal::Arr(vals) => {
+                write!(f, "[")?;
+                for val in &vals[0..vals.len() - 1] {
+                    write!(f, "{val}, ")?;
+                }
+                write!(f, "{}", vals.last().unwrap())?;
+                write!(f, "]")
+            }
+        }
+    }
 }
 
 impl AbstractVal {

@@ -1,8 +1,6 @@
 use std::{ops::Deref, sync::Arc};
 
-use indexmap::IndexMap;
-
-use crate::{constraint::RevVal, rev_val_holder::LazyRevVal};
+use crate::rev_val_holder::LazyRevVal;
 
 // we use Vec to keep Hash working
 type SingleMapping = Arc<Vec<(&'static str, Box<LazyRevVal>)>>;
