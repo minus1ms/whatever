@@ -3,6 +3,7 @@ use std::fmt::Debug;
 use hashbrown::HashMap;
 
 use crate::{
+    bytecode::{Bytecode, BytecodeProgram},
     constraint::{Constraint, ConstraintId, Constraints, ConstraintsHolder, ContextVal, RevVal},
     rev_fns::{
         ChConstraints, MajConstraints, WrappingAddConstraints, rev_assignment, rev_big_sigma0,
@@ -693,7 +694,7 @@ impl PossibleStep {
                     match constraints_holder.get(&id.back()) {
                         Constraints::Step2(x) => {
                             let constraint = Constraint::Equals(
-                                RevVal::Input(0).into(),
+                                BytecodeProgram::from_code(vec![Bytecode::Input(0)]),
                                 ContextVal::Array("h".into(), 7).into(),
                             );
                             x.w_add7.to_w_add().constraints.push(constraint);

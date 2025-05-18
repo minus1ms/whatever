@@ -16,7 +16,7 @@ use once_cell::sync::Lazy;
 use parking_lot::Mutex;
 
 use crate::{
-    bytecode::Bytecode,
+    bytecode::{Bytecode, BytecodeProgram},
     evaluated::factorise,
     mapping::Mapping,
     rev_fns::{
@@ -26,12 +26,12 @@ use crate::{
     rev_val_holder::{LazyRevVal, RevValHolder},
     reverse::{Context, Step1Constraints, Step2Constraints},
     sha256::{ch, maj},
-    utils::{AbstractVal, usize_to_var_name},
+    utils::AbstractVal,
 };
 
 #[derive(Debug)]
 pub enum Constraint {
-    Equals(LazyRevVal, LazyRevVal),
+    Equals(BytecodeProgram, LazyRevVal),
 }
 
 impl Display for Constraint {

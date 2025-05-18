@@ -1,4 +1,5 @@
 use crate::{
+    bytecode::{Bytecode, BytecodeProgram},
     constraint::{
         Constraint, ConstraintId, Constraints, ConstraintsHolder, ContextVal, Operation, RevVal,
     },
@@ -21,7 +22,7 @@ pub fn rev_big_sigma0(
             match constraints_holder.get(&id.back()) {
                 Constraints::Step2(x) => {
                     let constraint = Constraint::Equals(
-                        RevVal::Input(0).into(),
+                        BytecodeProgram::from_code(vec![Bytecode::Input(0)]),
                         Operation::BigSigma0("a".into()).into(),
                     );
                     x.w_add3.to_w_add().constraints.push(constraint);
@@ -55,7 +56,7 @@ pub fn rev_big_sigma1(
             match constraints_holder.get(&id.back()) {
                 Constraints::Step2(x) => {
                     let constraint = Constraint::Equals(
-                        RevVal::Input(1).into(),
+                        BytecodeProgram::from_code(vec![Bytecode::Input(1)]),
                         Operation::BigSigma1("e".into()).into(),
                     );
                     x.w_add7.to_w_add().constraints.push(constraint);
@@ -106,7 +107,7 @@ pub fn rev_ch(
                     match constraints_holder.get(&id.back()) {
                         Constraints::Step2(x) => {
                             let constraint = Constraint::Equals(
-                                RevVal::Input(1).into(),
+                                BytecodeProgram::from_code(vec![Bytecode::Input(1)]),
                                 Operation::Ch("e".into(), "f".into(), "g".into()).into(),
                             );
                             let t1_1 = Operation::WAdd(
@@ -228,7 +229,10 @@ pub fn rev_assignment(
                             .into();
                             let prev_iter_t1: LazyRevVal =
                                 Operation::WSub("a".into(), prev_iter_t2).into();
-                            let constraint = Constraint::Equals(RevVal::Input(0).into(), val);
+                            let constraint = Constraint::Equals(
+                                BytecodeProgram::from_code(vec![Bytecode::Input(0)]),
+                                val,
+                            );
                             let constraint = constraint.map_context(vec![
                                 (
                                     "i",
@@ -299,7 +303,10 @@ pub fn rev_assignment(
                             .into();
                             let prev_iter_t1: LazyRevVal =
                                 Operation::WSub("a".into(), prev_iter_t2).into();
-                            let constraint = Constraint::Equals(RevVal::Input(0).into(), val);
+                            let constraint = Constraint::Equals(
+                                BytecodeProgram::from_code(vec![Bytecode::Input(0)]),
+                                val,
+                            );
                             let constraint = constraint.map_context(vec![
                                 (
                                     "i",
@@ -369,7 +376,10 @@ pub fn rev_assignment(
                             )
                             .into();
                             let prev_iter_t1 = Operation::WSub("a".into(), prev_iter_t2).into();
-                            let constraint = Constraint::Equals(RevVal::Input(0).into(), val);
+                            let constraint = Constraint::Equals(
+                                BytecodeProgram::from_code(vec![Bytecode::Input(0)]),
+                                val,
+                            );
                             let constraint = constraint.map_context(vec![
                                 (
                                     "i",
@@ -444,7 +454,10 @@ pub fn rev_assignment(
                                 Operation::BigSigma1("e".into()).into(),
                             )
                             .into();
-                            let constraint = Constraint::Equals(RevVal::Input(0).into(), val);
+                            let constraint = Constraint::Equals(
+                                BytecodeProgram::from_code(vec![Bytecode::Input(0)]),
+                                val,
+                            );
                             let constraint = constraint.map_context(vec![
                                 (
                                     "i",
@@ -517,7 +530,10 @@ pub fn rev_assignment(
                                 Operation::BigSigma1("e".into()).into(),
                             )
                             .into();
-                            let constraint = Constraint::Equals(RevVal::Input(0).into(), val);
+                            let constraint = Constraint::Equals(
+                                BytecodeProgram::from_code(vec![Bytecode::Input(0)]),
+                                val,
+                            );
                             let constraint = constraint.map_context(vec![
                                 (
                                     "i",
@@ -571,7 +587,10 @@ pub fn rev_assignment(
                             let old_d = Operation::WSub("e".into(), prev_iter_t1.clone()).into();
                             let big_sigma1 = Operation::BigSigma1("e".into()).into();
                             let old_h_temp = Operation::WSub("t1".into(), big_sigma1).into();
-                            let constraint = Constraint::Equals(RevVal::Input(0).into(), val);
+                            let constraint = Constraint::Equals(
+                                BytecodeProgram::from_code(vec![Bytecode::Input(0)]),
+                                val,
+                            );
                             let constraint = constraint.map_context(vec![
                                 (
                                     "i",
@@ -642,7 +661,7 @@ pub fn rev_wrapping_add(
                                 match constraints_holder.get(&id.back().back()) {
                                     Constraints::Step2(x) => {
                                         let constraint = Constraint::Equals(
-                                            RevVal::Input(0).into(),
+                                            BytecodeProgram::from_code(vec![Bytecode::Input(0)]),
                                             Operation::WAdd(val1, raw_second_in).into(),
                                         );
                                         let prev_iter_t2 = Operation::WAdd(
@@ -754,7 +773,7 @@ pub fn rev_wrapping_add(
                                         let old_d =
                                             Operation::WSub("e".into(), t1_4.clone()).into();
                                         let constraint = Constraint::Equals(
-                                            RevVal::Input(0).into(),
+                                            BytecodeProgram::from_code(vec![Bytecode::Input(0)]),
                                             Operation::WAdd(val1, raw_second_in).into(),
                                         )
                                         .map_context(vec![
@@ -795,7 +814,7 @@ pub fn rev_wrapping_add(
                                 match constraints_holder.get(&id.back()) {
                                     Constraints::Step2(x) => {
                                         let constraint = Constraint::Equals(
-                                            RevVal::Input(0).into(),
+                                            BytecodeProgram::from_code(vec![Bytecode::Input(0)]),
                                             Operation::WAdd(val1, raw_second_in).into(),
                                         );
                                         let t1_3 = Operation::WSub(
@@ -882,7 +901,7 @@ pub fn rev_wrapping_add(
                                     let big_sigma1 = Operation::BigSigma1("f".into()).into();
                                     let old_h_temp = Operation::WSub(old_t1, big_sigma1).into();
                                     let constraint = Constraint::Equals(
-                                        RevVal::Input(0).into(),
+                                        BytecodeProgram::from_code(vec![Bytecode::Input(0)]),
                                         Operation::WAdd(val1, val2).into(),
                                     );
                                     let constraint = constraint.map_context(vec![
@@ -959,7 +978,7 @@ pub fn rev_wrapping_add(
                             match constraints_holder.get(&id.back()) {
                                 Constraints::Step2(x) => {
                                     let constraint = Constraint::Equals(
-                                        RevVal::Input(1).into(),
+                                        BytecodeProgram::from_code(vec![Bytecode::Input(1)]),
                                         Operation::WAdd(val1, val2).into(),
                                     );
                                     let old_d: LazyRevVal =
@@ -1026,7 +1045,7 @@ pub fn rev_wrapping_add(
                             match constraints_holder.get(&id.back()) {
                                 Constraints::Step2(x) => {
                                     let constraint = Constraint::Equals(
-                                        RevVal::Input(0).into(),
+                                        BytecodeProgram::from_code(vec![Bytecode::Input(0)]),
                                         Operation::WAdd(val1, val2).into(),
                                     );
                                     let t1_2 = Operation::WSub(
@@ -1083,7 +1102,7 @@ pub fn rev_wrapping_add(
                             match constraints_holder.get(&id.back()) {
                                 Constraints::Step2(x) => {
                                     let constraint = Constraint::Equals(
-                                        RevVal::Input(0).into(),
+                                        BytecodeProgram::from_code(vec![Bytecode::Input(0)]),
                                         Operation::WAdd(val1, val2).into(),
                                     );
                                     let ch =
@@ -1132,7 +1151,7 @@ pub fn rev_maj(
                     match constraints_holder.get(&id.back()) {
                         Constraints::Step2(x) => {
                             let constraint = Constraint::Equals(
-                                RevVal::Input(1).into(),
+                                BytecodeProgram::from_code(vec![Bytecode::Input(1)]),
                                 Operation::Maj("a".into(), "b".into(), "c".into()).into(),
                             );
                             x.w_add3.to_w_add().constraints.push(constraint);
@@ -1237,7 +1256,7 @@ pub fn rev_and(
                     Constraints::Maj(x) => match count {
                         3 => {
                             let constraint = Constraint::Equals(
-                                RevVal::Input(0).into(),
+                                BytecodeProgram::from_code(vec![Bytecode::Input(0)]),
                                 Operation::And(RevVal::Output.into(), "y".into()).into(),
                             );
                             todo!("{constraint}");
