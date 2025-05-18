@@ -2,6 +2,7 @@
 
 use reverse::RevProc;
 
+mod bytecode;
 mod constraint;
 mod evaluated;
 mod helper;

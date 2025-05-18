@@ -16,6 +16,7 @@ use once_cell::sync::Lazy;
 use parking_lot::Mutex;
 
 use crate::{
+    bytecode::Bytecode,
     evaluated::factorise,
     mapping::Mapping,
     rev_fns::{

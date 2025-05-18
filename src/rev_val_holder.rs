@@ -10,6 +10,7 @@ use hashbrown::{HashMap, HashSet};
 use indexmap::IndexMap;
 
 use crate::{
+    bytecode::BytecodeProgram,
     constraint::{ContextVal, Operation, RevVal},
     evaluated::EvaluatedRevVal,
     mapping::Mapping,
@@ -168,8 +169,9 @@ impl LazyRevVal {
     }
 
     pub fn evaluate(&self, context: &Context) -> AbstractVal {
-        let mut cache = HashMap::new();
-        self.into_evaluated().evaluate(&mut cache, context)
+        // convert to bytecode
+        let program = BytecodeProgram::create(self);
+        program.execute(context)
     }
 
     // we keep mapping Vec in there in order to apply this mapping to another LazyRevVal in mapping field
