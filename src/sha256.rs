@@ -202,7 +202,6 @@ fn padding_compression_loop(h: &mut [u32; 8]) {
         c = b;
         b = a;
         a = t1_4.wrapping_add(t2_2);
-        // todo!();
         // let t2 = big_sigma0(b).wrapping_add(maj(b, c, d));
         // get t1 from above a = operation
     }

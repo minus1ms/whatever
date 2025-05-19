@@ -16,7 +16,7 @@ use once_cell::sync::Lazy;
 use parking_lot::Mutex;
 
 use crate::{
-    bytecode::{Bytecode, BytecodeProgram},
+    bytecode::{Bytecode, BytecodeMapping, BytecodeProgram, BytecodeSingleMapping},
     evaluated::factorise,
     mapping::Mapping,
     rev_fns::{
@@ -31,37 +31,27 @@ use crate::{
 
 #[derive(Debug)]
 pub enum Constraint {
-    Equals(BytecodeProgram, LazyRevVal),
+    Equals(BytecodeProgram, BytecodeProgram),
 }
 
 impl Display for Constraint {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Constraint::Equals(val1, val2) => {
-                let eval = val2.into_evaluated();
-                let (val, vars) = factorise(eval);
-                for (name, code) in vars {
-                    println!("let {} = {};", name, code)
-                }
-                write!(f, "{} == {}", val1, val)
+                write!(f, "{} == {}", val1, val2)
             }
         }
     }
 }
 
 impl Constraint {
-    pub fn map_context(self, mapping: Vec<(&'static str, LazyRevVal)>) -> Constraint {
-        let mapping = Arc::new(
-            mapping
-                .into_iter()
-                .map(|(key, val)| (key, Box::new(val)))
-                .collect_vec(),
-        );
+    pub fn map_context(self, mapping: Vec<(&'static str, BytecodeProgram)>) -> Constraint {
+        let mapping: BytecodeSingleMapping = Rc::new(mapping);
 
         match self {
             Constraint::Equals(val1, val2) => Constraint::Equals(
-                val1.map_context(Mapping::create(mapping.clone())),
-                val2.map_context(Mapping::create(mapping.clone())),
+                val1.map_context(mapping.clone()),
+                val2.map_context(mapping.clone()),
             ),
         }
     }

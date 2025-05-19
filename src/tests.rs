@@ -1,4 +1,13 @@
-use crate::{reverse::rev_compute_digest, sha256::compute_digest};
+use std::collections::VecDeque;
+
+use rand::random;
+
+use crate::{
+    bytecode::{Bytecode, BytecodeProgram},
+    reverse::{Context, rev_compute_digest},
+    sha256::{compute_digest, maj},
+    utils::AbstractVal,
+};
 
 // turn digest back into h
 #[test]
@@ -12,5 +21,29 @@ fn test_digest() {
         let reverse = rev_compute_digest(digest);
         let original = compute_digest(reverse);
         assert_eq!(digest, original)
+    }
+}
+
+// we test bytecode program
+#[test]
+fn test_maj() {
+    let program = BytecodeProgram::from_code(VecDeque::from([
+        Bytecode::Context("a"),
+        Bytecode::Context("b"),
+        Bytecode::Context("c"),
+        Bytecode::Maj,
+    ]));
+
+    for _ in 0..10 {
+        let a = random();
+        let b = random();
+        let c = random();
+        let ctx = Context::new(vec![
+            ("a", AbstractVal::U32(a)),
+            ("b", AbstractVal::U32(b)),
+            ("c", AbstractVal::U32(c)),
+        ]);
+        let res = maj(a, b, c);
+        assert_eq!(res, program.execute(&ctx).to_u32());
     }
 }

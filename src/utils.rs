@@ -17,7 +17,7 @@ impl<T> From<T> for RevRes<T> {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum AbstractVal {
     U32(u32),
     Arr(Vec<AbstractVal>),

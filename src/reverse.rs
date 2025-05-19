@@ -491,7 +491,7 @@ impl PossibleStep {
                 let (t1, _w_val) = match rev_wrapping_add(
                     t1,
                     None,
-                    Some(ContextVal::Array("w", i).into()),
+                    Some(Bytecode::AvLoad("w", i).into()),
                     constraints_holder,
                     id.next(11),
                     4,
@@ -527,7 +527,7 @@ impl PossibleStep {
                 let (t1, _k_val) = match rev_wrapping_add(
                     t1,
                     None,
-                    Some(ContextVal::Array("K".into(), i).into()),
+                    Some(Bytecode::AvLoad("K", i).into()),
                     constraints_holder,
                     id.next(12),
                     5,
@@ -694,8 +694,8 @@ impl PossibleStep {
                     match constraints_holder.get(&id.back()) {
                         Constraints::Step2(x) => {
                             let constraint = Constraint::Equals(
-                                BytecodeProgram::from_code(vec![Bytecode::Input(0)]),
-                                ContextVal::Array("h".into(), 7).into(),
+                                BytecodeProgram::from_single_code(Bytecode::Input(0)),
+                                BytecodeProgram::from_single_code(Bytecode::AvLoad("h", 7)),
                             );
                             x.w_add7.to_w_add().constraints.push(constraint);
                             return RevRes::ConstraintsChanged(id);
@@ -821,7 +821,7 @@ impl Default for Step2Constraints {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Context {
     pub values: HashMap<&'static str, AbstractVal>,
 }
