@@ -1,4 +1,4 @@
-use std::collections::VecDeque;
+// use std::collections::VecDeque; // replaced with Vec
 
 use rand::random;
 
@@ -27,7 +27,7 @@ fn test_digest() {
 // we test bytecode program
 #[test]
 fn test_maj() {
-    let program = BytecodeProgram::from_code(VecDeque::from([
+    let program = BytecodeProgram::from_code(Vec::from([
         Bytecode::Context("a"),
         Bytecode::Context("b"),
         Bytecode::Context("c"),

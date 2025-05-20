@@ -50,8 +50,8 @@ impl Constraint {
 
         match self {
             Constraint::Equals(val1, val2) => Constraint::Equals(
-                val1.map_context(mapping.clone()),
-                val2.map_context(mapping.clone()),
+                val1.map_context_lazy(mapping.clone()),
+                val2.map_context_lazy(mapping.clone()),
             ),
         }
     }
