@@ -176,19 +176,148 @@ fn padding_compression_loop(h: &mut [u32; 8]) {
         let t1_1 = h_temp.wrapping_add(big_sigma);
         let ch_ = ch(e, f, g);
         let t1_2 = t1_1.wrapping_add(ch_);
+        if i == 24 {
+            println!("{} {}", t1_1, {
+                let t1 = t1_2;
+                {
+                    let (t1) = (t1.wrapping_sub(ch(e, f, g)));
+                    {
+                    let (i, a, b, c, d, e, f, h_temp, t1) = (i.wrapping_sub(1), b, c, d, e.wrapping_sub(a.wrapping_sub(big_sigma0(b).wrapping_add(maj(b, c, d)))), f, g, t1.wrapping_sub(big_sigma1(e)), a.wrapping_sub(big_sigma0(b).wrapping_add(maj(b, c, d))));
+                    {
+                    let (i, a, b, c, d, e, g, h_temp, t1) = (i.wrapping_sub(1), b, c, d, e.wrapping_sub(a.wrapping_sub(big_sigma0(b).wrapping_add(maj(b, c, d)))), f, h_temp, t1.wrapping_sub(w[i]).wrapping_sub(K[i]).wrapping_sub(ch(e, f, h_temp)).wrapping_sub(big_sigma1(e)), a.wrapping_sub(big_sigma0(b).wrapping_add(maj(b, c, d))));
+                    {
+                    let (i, a, b, c, d, f, g, h_temp, t1) = (i.wrapping_sub(1), b, c, d, e.wrapping_sub(a.wrapping_sub(big_sigma0(b).wrapping_add(maj(b, c, d)))), g, h_temp, t1.wrapping_sub(w[i]).wrapping_sub(K[i]).wrapping_sub(ch(e, g, h_temp)).wrapping_sub(big_sigma1(e)), a.wrapping_sub(big_sigma0(b).wrapping_add(maj(b, c, d))));
+                    {
+                    let (a, b, c, d, f, e, g, h_temp, i, t1) = (b, c, d, f.wrapping_sub(a.wrapping_sub(big_sigma0(b).wrapping_add(maj(b, c, d)))), g, f, h_temp, t1.wrapping_sub(w[i]).wrapping_sub(K[i]).wrapping_sub(ch(f, g, h_temp)).wrapping_sub(big_sigma1(f)), i.wrapping_sub(1), a.wrapping_sub(big_sigma0(b).wrapping_add(maj(b, c, d))));
+                    {
+                    let (i, a, b, d, e, f, g, h_temp, t1) = (i.wrapping_sub(1), b, c, e.wrapping_sub(t1), f, g, h_temp, t1.wrapping_sub(w[i]).wrapping_sub(K[i]).wrapping_sub(ch(f, g, h_temp)).wrapping_sub(big_sigma1(f)), a.wrapping_sub(big_sigma0(b).wrapping_add(maj(b, c, e.wrapping_sub(t1)))));
+                    {
+                    let (i, a, c, d, e, f, g, h_temp, t1) = (i.wrapping_sub(1), b, d, e.wrapping_sub(t1), f, g, h_temp, t1.wrapping_sub(w[i]).wrapping_sub(K[i]).wrapping_sub(ch(f, g, h_temp)).wrapping_sub(big_sigma1(f)), a.wrapping_sub(big_sigma0(b).wrapping_add(maj(b, d, e.wrapping_sub(t1)))));
+                    {
+                    let (i, b, c, d, e, f, g, h_temp, t1) = (i.wrapping_sub(1), c, d, e.wrapping_sub(t1), f, g, h_temp, t1.wrapping_sub(w[i]).wrapping_sub(K[i]).wrapping_sub(ch(f, g, h_temp)).wrapping_sub(big_sigma1(f)), a.wrapping_sub(big_sigma0(c).wrapping_add(maj(c, d, e.wrapping_sub(t1)))));
+                    {
+                    let (a, b, c, d, e, f, g, h_temp, i) = (b, c, d, e.wrapping_sub(t1), f, g, h_temp, t1.wrapping_sub(w[i]).wrapping_sub(K[i]).wrapping_sub(ch(f, g, h_temp)).wrapping_sub(big_sigma1(f)), i.wrapping_sub(1));
+                    {
+                    let (a, b, c, d, e, f, g, h_temp, t1) = (b, c, d, e.wrapping_sub(a.wrapping_sub(big_sigma0(b).wrapping_add(maj(b, c, d)))), f, g, h_temp, a.wrapping_sub(big_sigma0(b).wrapping_add(maj(b, c, d))).wrapping_sub(w[i]).wrapping_sub(K[i]).wrapping_sub(ch(f, g, h_temp)).wrapping_sub(big_sigma1(f)), a.wrapping_sub(big_sigma0(b).wrapping_add(maj(b, c, d))));
+                    {
+                    let (t1) = (t1.wrapping_sub(w[i]));
+                    {
+                    let (t1) = (t1.wrapping_sub(K[i]));
+                    {
+                    let (t1) = (t1.wrapping_sub(ch(e, f, g)));
+                    {
+                    let (i, a, b, c, d, e, f, h_temp, t1) = (i.wrapping_sub(1), b, c, d, e.wrapping_sub(a.wrapping_sub(big_sigma0(b).wrapping_add(maj(b, c, d)))), f, g, t1.wrapping_sub(big_sigma1(e)), a.wrapping_sub(big_sigma0(b).wrapping_add(maj(b, c, d))));
+                    {
+                    let (i, a, b, c, d, e, g, h_temp, t1) = (i.wrapping_sub(1), b, c, d, e.wrapping_sub(a.wrapping_sub(big_sigma0(b).wrapping_add(maj(b, c, d)))), f, h_temp, t1.wrapping_sub(w[i]).wrapping_sub(K[i]).wrapping_sub(ch(e, f, h_temp)).wrapping_sub(big_sigma1(e)), a.wrapping_sub(big_sigma0(b).wrapping_add(maj(b, c, d))));
+                    {
+                    let (i, a, b, c, d, f, g, h_temp, t1) = (i.wrapping_sub(1), b, c, d, e.wrapping_sub(a.wrapping_sub(big_sigma0(b).wrapping_add(maj(b, c, d)))), g, h_temp, t1.wrapping_sub(w[i]).wrapping_sub(K[i]).wrapping_sub(ch(e, g, h_temp)).wrapping_sub(big_sigma1(e)), a.wrapping_sub(big_sigma0(b).wrapping_add(maj(b, c, d))));
+                    {
+                    let (a, b, c, d, f, e, g, h_temp, i, t1) = (b, c, d, f.wrapping_sub(a.wrapping_sub(big_sigma0(b).wrapping_add(maj(b, c, d)))), g, f, h_temp, t1.wrapping_sub(w[i]).wrapping_sub(K[i]).wrapping_sub(ch(f, g, h_temp)).wrapping_sub(big_sigma1(f)), i.wrapping_sub(1), a.wrapping_sub(big_sigma0(b).wrapping_add(maj(b, c, d))));
+                    {
+                    let (i, a, b, d, e, f, g, h_temp, t1) = (i.wrapping_sub(1), b, c, e.wrapping_sub(t1), f, g, h_temp, t1.wrapping_sub(w[i]).wrapping_sub(K[i]).wrapping_sub(ch(f, g, h_temp)).wrapping_sub(big_sigma1(f)), a.wrapping_sub(big_sigma0(b).wrapping_add(maj(b, c, e.wrapping_sub(t1)))));
+                    {
+                    let (i, a, c, d, e, f, g, h_temp, t1) = (i.wrapping_sub(1), b, d, e.wrapping_sub(t1), f, g, h_temp, t1.wrapping_sub(w[i]).wrapping_sub(K[i]).wrapping_sub(ch(f, g, h_temp)).wrapping_sub(big_sigma1(f)), a.wrapping_sub(big_sigma0(b).wrapping_add(maj(b, d, e.wrapping_sub(t1)))));
+                    {
+                    let (i, b, c, d, e, f, g, h_temp, t1) = (i.wrapping_sub(1), c, d, e.wrapping_sub(t1), f, g, h_temp, t1.wrapping_sub(w[i]).wrapping_sub(K[i]).wrapping_sub(ch(f, g, h_temp)).wrapping_sub(big_sigma1(f)), a.wrapping_sub(big_sigma0(c).wrapping_add(maj(c, d, e.wrapping_sub(t1)))));
+                    {
+                    let (a, b, c, d, e, f, g, h_temp, i) = (b, c, d, e.wrapping_sub(t1), f, g, h_temp, t1.wrapping_sub(w[i]).wrapping_sub(K[i]).wrapping_sub(ch(f, g, h_temp)).wrapping_sub(big_sigma1(f)), i.wrapping_sub(1));
+                    {
+                    let (a, b, c, d, e, f, g, h_temp, t1) = (b, c, d, e.wrapping_sub(a.wrapping_sub(big_sigma0(b).wrapping_add(maj(b, c, d)))), f, g, h_temp, a.wrapping_sub(big_sigma0(b).wrapping_add(maj(b, c, d))).wrapping_sub(w[i]).wrapping_sub(K[i]).wrapping_sub(ch(f, g, h_temp)).wrapping_sub(big_sigma1(f)), a.wrapping_sub(big_sigma0(b).wrapping_add(maj(b, c, d))));
+                    {
+                    let (t1) = (t1.wrapping_sub(w[i]));
+                    {
+                    let (t1) = (t1.wrapping_sub(K[i]));
+                    {
+                    let (t1) = (t1.wrapping_sub(ch(e, f, g)));
+                    {
+                    let (i, a, b, c, d, e, f, h_temp, t1) = (i.wrapping_sub(1), b, c, d, e.wrapping_sub(a.wrapping_sub(big_sigma0(b).wrapping_add(maj(b, c, d)))), f, g, t1.wrapping_sub(big_sigma1(e)), a.wrapping_sub(big_sigma0(b).wrapping_add(maj(b, c, d))));
+                    {
+                    let (i, a, b, c, d, e, g, h_temp, t1) = (i.wrapping_sub(1), b, c, d, e.wrapping_sub(a.wrapping_sub(big_sigma0(b).wrapping_add(maj(b, c, d)))), f, h_temp, t1.wrapping_sub(w[i]).wrapping_sub(K[i]).wrapping_sub(ch(e, f, h_temp)).wrapping_sub(big_sigma1(e)), a.wrapping_sub(big_sigma0(b).wrapping_add(maj(b, c, d))));
+                    {
+                    let (i, a, b, c, d, f, g, h_temp, t1) = (i.wrapping_sub(1), b, c, d, e.wrapping_sub(a.wrapping_sub(big_sigma0(b).wrapping_add(maj(b, c, d)))), g, h_temp, t1.wrapping_sub(w[i]).wrapping_sub(K[i]).wrapping_sub(ch(e, g, h_temp)).wrapping_sub(big_sigma1(e)), a.wrapping_sub(big_sigma0(b).wrapping_add(maj(b, c, d))));
+                    {
+                    let (a, b, c, d, f, e, g, h_temp, i, t1) = (b, c, d, f.wrapping_sub(a.wrapping_sub(big_sigma0(b).wrapping_add(maj(b, c, d)))), g, f, h_temp, t1.wrapping_sub(w[i]).wrapping_sub(K[i]).wrapping_sub(ch(f, g, h_temp)).wrapping_sub(big_sigma1(f)), i.wrapping_sub(1), a.wrapping_sub(big_sigma0(b).wrapping_add(maj(b, c, d))));
+                    {
+                    let (i, a, b, d, e, f, g, h_temp, t1) = (i.wrapping_sub(1), b, c, e.wrapping_sub(t1), f, g, h_temp, t1.wrapping_sub(w[i]).wrapping_sub(K[i]).wrapping_sub(ch(f, g, h_temp)).wrapping_sub(big_sigma1(f)), a.wrapping_sub(big_sigma0(b).wrapping_add(maj(b, c, e.wrapping_sub(t1)))));
+                    {
+                    let (i, a, c, d, e, f, g, h_temp, t1) = (i.wrapping_sub(1), b, d, e.wrapping_sub(t1), f, g, h_temp, t1.wrapping_sub(w[i]).wrapping_sub(K[i]).wrapping_sub(ch(f, g, h_temp)).wrapping_sub(big_sigma1(f)), a.wrapping_sub(big_sigma0(b).wrapping_add(maj(b, d, e.wrapping_sub(t1)))));
+                    {
+                    let (i, b, c, d, e, f, g, h_temp, t1) = (i.wrapping_sub(1), c, d, e.wrapping_sub(t1), f, g, h_temp, t1.wrapping_sub(w[i]).wrapping_sub(K[i]).wrapping_sub(ch(f, g, h_temp)).wrapping_sub(big_sigma1(f)), a.wrapping_sub(big_sigma0(c).wrapping_add(maj(c, d, e.wrapping_sub(t1)))));
+                    {
+                    let (a, b, c, d, e, f, g, h_temp, i) = (b, c, d, e.wrapping_sub(t1), f, g, h_temp, t1.wrapping_sub(w[i]).wrapping_sub(K[i]).wrapping_sub(ch(f, g, h_temp)).wrapping_sub(big_sigma1(f)), i.wrapping_sub(1));
+                    {
+                    let (a, b, c, d, e, f, g, h_temp, t1) = (b, c, d, e.wrapping_sub(a.wrapping_sub(big_sigma0(b).wrapping_add(maj(b, c, d)))), f, g, h_temp, a.wrapping_sub(big_sigma0(b).wrapping_add(maj(b, c, d))).wrapping_sub(w[i]).wrapping_sub(K[i]).wrapping_sub(ch(f, g, h_temp)).wrapping_sub(big_sigma1(f)), a.wrapping_sub(big_sigma0(b).wrapping_add(maj(b, c, d))));
+                    {
+                    let (t1) = (t1.wrapping_sub(w[i]));
+                    {
+                    let (t1) = (t1.wrapping_sub(K[i]));
+                    {
+                    let (t1) = (t1.wrapping_sub(ch(e, f, g)));
+                    h[7].wrapping_add(big_sigma1(e))
+                    }.wrapping_add({
+                    let (t1) = (t1.wrapping_sub(h_temp.wrapping_add(big_sigma1(e))));
+                    ch(e, f, g)
+                    })
+                    }.wrapping_add(K[0])
+                    }.wrapping_add(w[0])
+                    }.wrapping_add({
+                    let (a, b, c, d, e, f, g) = (b, c, d, e.wrapping_sub(a.wrapping_sub(big_sigma0(b).wrapping_add(maj(b, c, d)))), f, g, h_temp);
+                    big_sigma0(a).wrapping_add(maj(a, b, c))
+                    })
+                    }
+                    }
+                    }
+                    }.wrapping_add(t1)
+                    }
+                    }
+                    }
+                    }.wrapping_add(big_sigma1(e))
+                    }.wrapping_add({
+                    let (t1) = (t1.wrapping_sub(h_temp.wrapping_add(big_sigma1(e))));
+                    ch(e, f, g)
+                    })
+                    }.wrapping_add(K[8])
+                    }.wrapping_add(w[8])
+                    }.wrapping_add({
+                    let (a, b, c, d, e, f, g) = (b, c, d, e.wrapping_sub(a.wrapping_sub(big_sigma0(b).wrapping_add(maj(b, c, d)))), f, g, h_temp);
+                    big_sigma0(a).wrapping_add(maj(a, b, c))
+                    })
+                    }
+                    }
+                    }
+                    }.wrapping_add(t1)
+                    }
+                    }
+                    }
+                    }.wrapping_add(big_sigma1(e))
+                    }.wrapping_add({
+                    let (t1) = (t1.wrapping_sub(h_temp.wrapping_add(big_sigma1(e))));
+                    ch(e, f, g)
+                    })
+                    }.wrapping_add(K[16])
+                    }.wrapping_add(w[16])
+                    }.wrapping_add({
+                    let (a, b, c, d, e, f, g) = (b, c, d, e.wrapping_sub(a.wrapping_sub(big_sigma0(b).wrapping_add(maj(b, c, d)))), f, g, h_temp);
+                    big_sigma0(a).wrapping_add(maj(a, b, c))
+                    })
+                    }
+                    }
+                    }
+                    }.wrapping_add(t1)
+                    }
+                    }
+                    }
+                    }.wrapping_add(big_sigma1(e))
+                    }
+            });
+            todo!();
+        }
         let t1_3 = t1_2.wrapping_add(K[i]);
         let t1_4 = t1_3.wrapping_add(w[i]);
         let t2_1 = big_sigma0(a);
         let maj_ = maj(a, b, c);
         let t2_2 = t2_1.wrapping_add(maj_);
         h_temp = g;
-        // if i == 23 {
-        //     let t1 = t1_4;
-        //    println!("{} {}", h_temp, {
-        //        todo!()
-        //    });
-        //    todo!();
-        // }
         // old_h_temp equation:
         // t1_4
         // .wrapping_sub(w[i])

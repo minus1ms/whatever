@@ -164,7 +164,7 @@ impl Display for BytecodeProgram {
                         stack.push(format!("ch({x}, {y}, {z})"));
                     }
                     Bytecode::Input(_) => todo!(),
-                    Bytecode::Custom(_, id) => stack.push(format!("Custom({id})")),
+                    Bytecode::Custom(x, id) => stack.push(format!("{}", x.display())),
                 }
             }
 
@@ -531,13 +531,6 @@ pub fn eval(mappings: &[BytecodeSingleMapping], ctx: &Context, name: Var) -> Abs
         }
     }
     if let Some(found) = found {
-        println!("mappings: {}", mappings.len());
-        // for mapping in mappings {
-        //     println!("mapping: {:?}", mapping);
-        // }
-        println!("name: {name}");
-        println!("ctx: {:?}", ctx);
-        println!("{:?}", found);
         found.execute(ctx)
     } else {
         ctx.get(name)

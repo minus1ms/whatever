@@ -236,9 +236,8 @@ pub fn rev_assignment(
                                     ctx: &Context,
                                     acumulated_mapping: &[BytecodeSingleMapping],
                                 ) -> AbstractVal {
-                                    println!("{:?}", ctx);
                                     // an example
-                                    // 1. values from initial context and existing mappings
+                                    // 1. values from initial context and existing mappings, we need to handle mappings in case we are wrapped
                                     let h = ctx.get(Var::H);
                                     let w = ctx.get(Var::W);
                                     let k = ctx.get(Var::K);
@@ -254,7 +253,8 @@ pub fn rev_assignment(
 
                                     // 2. values from current mapping
                                     let old_d = e.to_u32().wrapping_sub(t1);
-                                    let (c, d, e, f, g, h_temp, t1, i) = (
+                                    let (b, c, d, e, f, g, h_temp, t1, i) = (
+                                        c.clone(),
                                         d.clone(),
                                         old_d,
                                         f.clone(),
@@ -278,11 +278,12 @@ pub fn rev_assignment(
                                         i.wrapping_sub(1),
                                     );
 
-                                    // 3. context construction from values
+                                    // 3. context construction from values, we provide everything that we mapped
                                     let ctx = Context::new(vec![
                                         (Var::H, h),
                                         (Var::W, w),
                                         (Var::K, k),
+                                        (Var::B, b),
                                         (Var::C, c),
                                         (Var::D, AbstractVal::U32(d)),
                                         (Var::E, e),
@@ -295,6 +296,13 @@ pub fn rev_assignment(
 
                                     // 4. final program execution using the context
                                     self.val.execute(&ctx)
+                                }
+
+                                fn display(&self) -> String {
+                                    format!(
+                                        "{{\nlet (i, b, c, d, e, f, g, h_temp, t1) = (i.wrapping_sub(1), c, d, e.wrapping_sub(t1), f, g, h_temp, t1.wrapping_sub(w[i]).wrapping_sub(K[i]).wrapping_sub(ch(f, g, h_temp)).wrapping_sub(big_sigma1(f)), a.wrapping_sub(big_sigma0(c).wrapping_add(maj(c, d, e.wrapping_sub(t1)))));\n{}\n}}",
+                                        self.val
+                                    )
                                 }
                             }
                             let val = BytecodeProgram::from_single_code(Bytecode::Custom(
@@ -368,14 +376,6 @@ pub fn rev_assignment(
                             let Constraints::Ass(ass2) = &mut x.ass2 else {
                                 todo!()
                             };
-                            static mut A_COUNTER: usize = 0;
-                            unsafe {
-                                if A_COUNTER == 1 {
-                                    println!("{constraint}");
-                                    todo!()
-                                }
-                                A_COUNTER += 1;
-                            }
                             ass2.constraints.push(constraint);
                             return RevRes::ConstraintsChanged(id);
                         }
@@ -723,22 +723,6 @@ pub fn rev_assignment(
                             let Constraints::Ass(ass6) = &mut x.ass6 else {
                                 todo!()
                             };
-                            unsafe {
-                                if COUNTER == 2 {
-                                    // println!("{constraint}");
-                                    println!(
-                                        "{}",
-                                        match constraint {
-                                            Constraint::Equals(
-                                                bytecode_program,
-                                                bytecode_program1,
-                                            ) => bytecode_program1.code.len(),
-                                        }
-                                    );
-                                    std::process::exit(0);
-                                }
-                                COUNTER += 1;
-                            }
                             ass6.constraints.push(constraint);
                             return RevRes::ConstraintsChanged(id);
                         }
@@ -1355,6 +1339,13 @@ pub fn rev_wrapping_add(
                                         .add(Bytecode::WSub);
                                     let constraint =
                                         constraint.map_context(vec![(Var::T1, old_t1)]);
+                                    unsafe {
+                                        if COUNTER == 3 {
+                                            println!("{constraint}");
+                                            std::process::exit(0);
+                                        }
+                                        COUNTER += 1;
+                                    }
                                     x.w_add6.to_w_add().constraints.push(constraint);
                                     return RevRes::ConstraintsChanged(id);
                                 }
