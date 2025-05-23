@@ -23,17 +23,17 @@ impl Mapping {
         }
     }
 
-    pub fn apply(&self, name: &'static str) -> Option<LazyRevVal> {
-        let mut found: Option<LazyRevVal> = None;
-        for mapping in &self.content {
-            if let Some(fnd) = found {
-                found = Some(fnd.map_context(Mapping::create(mapping.clone())));
-            } else {
-                if let Some((_, got)) = mapping.iter().find(|(x, _)| *x == name) {
-                    found = Some(got.deref().clone())
-                }
-            }
-        }
-        found
-    }
+    // pub fn apply(&self, name: &'static str) -> Option<LazyRevVal> {
+    //     let mut found: Option<LazyRevVal> = None;
+    //     for mapping in &self.content {
+    //         if let Some(fnd) = found {
+    //             found = Some(fnd.map_context(Mapping::create(mapping.clone())));
+    //         } else {
+    //             if let Some((_, got)) = mapping.iter().find(|(x, _)| *x == name) {
+    //                 found = Some(got.deref().clone())
+    //             }
+    //         }
+    //     }
+    //     found
+    // }
 }

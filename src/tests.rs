@@ -7,6 +7,7 @@ use crate::{
     reverse::{Context, rev_compute_digest},
     sha256::{compute_digest, maj},
     utils::AbstractVal,
+    var::Var,
 };
 
 // turn digest back into h
@@ -28,9 +29,9 @@ fn test_digest() {
 #[test]
 fn test_maj() {
     let program = BytecodeProgram::from_code(Vec::from([
-        Bytecode::Context("a"),
-        Bytecode::Context("b"),
-        Bytecode::Context("c"),
+        Bytecode::Context(Var::A),
+        Bytecode::Context(Var::B),
+        Bytecode::Context(Var::C),
         Bytecode::Maj,
     ]));
 
@@ -39,9 +40,9 @@ fn test_maj() {
         let b = random();
         let c = random();
         let ctx = Context::new(vec![
-            ("a", AbstractVal::U32(a)),
-            ("b", AbstractVal::U32(b)),
-            ("c", AbstractVal::U32(c)),
+            (Var::A, AbstractVal::U32(a)),
+            (Var::B, AbstractVal::U32(b)),
+            (Var::C, AbstractVal::U32(c)),
         ]);
         let res = maj(a, b, c);
         assert_eq!(res, program.execute(&ctx).to_u32());

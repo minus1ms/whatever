@@ -25,68 +25,68 @@ pub enum EvaluatedRevVal {
     VarRef(String),
 }
 
-impl EvaluatedRevVal {
-    pub fn evaluate(
-        &self,
-        cache: &mut HashMap<EvaluatedRevVal, AbstractVal>,
-        context: &Context,
-    ) -> AbstractVal {
-        // if let Some(cached) = cache.get(self) {
-        //     return cached.clone();
-        // }
-        let res = match self {
-            EvaluatedRevVal::Context(context_val) => context_val.evaluate(cache, context),
-            EvaluatedRevVal::Const(x) => AbstractVal::U32(*x),
-            EvaluatedRevVal::Operation(operation) => operation.evaluate(cache, context),
-            EvaluatedRevVal::VarRef(_) => todo!(),
-        };
-        // cache.insert(self.clone(), res.clone());
-        res
-    }
+// impl EvaluatedRevVal {
+//     pub fn evaluate(
+//         &self,
+//         cache: &mut HashMap<EvaluatedRevVal, AbstractVal>,
+//         context: &Context,
+//     ) -> AbstractVal {
+//         // if let Some(cached) = cache.get(self) {
+//         //     return cached.clone();
+//         // }
+//         let res = match self {
+//             EvaluatedRevVal::Context(context_val) => context_val.evaluate(cache, context),
+//             EvaluatedRevVal::Const(x) => AbstractVal::U32(*x),
+//             EvaluatedRevVal::Operation(operation) => operation.evaluate(cache, context),
+//             EvaluatedRevVal::VarRef(_) => todo!(),
+//         };
+//         // cache.insert(self.clone(), res.clone());
+//         res
+//     }
 
-    pub fn create_lazy(arg: &LazyRevVal) -> Rc<Self> {
-        match arg {
-            LazyRevVal::Ref(rev_val) => Self::create(rev_val),
-            LazyRevVal::Mapping { inner, mapping } => Self::create_lazy_mapped(inner, mapping),
-        }
-    }
+//     pub fn create_lazy(arg: &LazyRevVal) -> Rc<Self> {
+//         match arg {
+//             LazyRevVal::Ref(rev_val) => Self::create(rev_val),
+//             LazyRevVal::Mapping { inner, mapping } => Self::create_lazy_mapped(inner, mapping),
+//         }
+//     }
 
-    fn create_lazy_mapped(val: &LazyRevVal, mapping: &Mapping) -> Rc<Self> {
-        match val {
-            LazyRevVal::Ref(rev_val) => Self::create_mapped(rev_val, mapping),
-            LazyRevVal::Mapping {
-                inner,
-                mapping: inner_mapping,
-            } => Self::create_lazy_mapped(&inner, &inner_mapping.merge(mapping.clone())),
-        }
-    }
+//     fn create_lazy_mapped(val: &LazyRevVal, mapping: &Mapping) -> Rc<Self> {
+//         match val {
+//             LazyRevVal::Ref(rev_val) => Self::create_mapped(rev_val, mapping),
+//             LazyRevVal::Mapping {
+//                 inner,
+//                 mapping: inner_mapping,
+//             } => Self::create_lazy_mapped(&inner, &inner_mapping.merge(mapping.clone())),
+//         }
+//     }
 
-    pub fn create(arg: &RevVal) -> Rc<Self> {
-        match arg {
-            RevVal::Output => todo!(),
-            RevVal::Input(_) => todo!(),
-            RevVal::Context(context_val) => EvaluatedContextVal::create(context_val),
-            RevVal::Const(x) => Self::Const(*x).into(),
-            RevVal::Operation(operation) => {
-                Self::Operation(EvaluatedOperation::create(operation).into()).into()
-            }
-        }
-    }
+//     pub fn create(arg: &RevVal) -> Rc<Self> {
+//         match arg {
+//             RevVal::Output => todo!(),
+//             RevVal::Input(_) => todo!(),
+//             RevVal::Context(context_val) => EvaluatedContextVal::create(context_val),
+//             RevVal::Const(x) => Self::Const(*x).into(),
+//             RevVal::Operation(operation) => {
+//                 Self::Operation(EvaluatedOperation::create(operation).into()).into()
+//             }
+//         }
+//     }
 
-    fn create_mapped(val: &RevVal, mapping: &Mapping) -> Rc<Self> {
-        match val {
-            RevVal::Output => todo!(),
-            RevVal::Input(_) => todo!(),
-            RevVal::Context(context_val) => {
-                EvaluatedContextVal::create_mapped(context_val, mapping)
-            }
-            RevVal::Const(x) => Self::Const(*x).into(),
-            RevVal::Operation(operation) => {
-                Self::Operation(EvaluatedOperation::create_mapped(operation, mapping).into()).into()
-            }
-        }
-    }
-}
+//     fn create_mapped(val: &RevVal, mapping: &Mapping) -> Rc<Self> {
+//         match val {
+//             RevVal::Output => todo!(),
+//             RevVal::Input(_) => todo!(),
+//             RevVal::Context(context_val) => {
+//                 EvaluatedContextVal::create_mapped(context_val, mapping)
+//             }
+//             RevVal::Const(x) => Self::Const(*x).into(),
+//             RevVal::Operation(operation) => {
+//                 Self::Operation(EvaluatedOperation::create_mapped(operation, mapping).into()).into()
+//             }
+//         }
+//     }
+// }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum EvaluatedOperation {
@@ -108,106 +108,106 @@ pub enum EvaluatedOperation {
     ),
 }
 
-impl EvaluatedOperation {
-    pub fn evaluate(
-        &self,
-        cache: &mut HashMap<EvaluatedRevVal, AbstractVal>,
-        context: &Context,
-    ) -> AbstractVal {
-        match self {
-            EvaluatedOperation::BigSigma0(val) => val.evaluate(cache, context).big_sigma0(),
-            EvaluatedOperation::BigSigma1(val) => val.evaluate(cache, context).big_sigma1(),
-            EvaluatedOperation::Xor(val1, val2) => todo!(),
-            EvaluatedOperation::And(val1, val2) => todo!(),
-            EvaluatedOperation::WAdd(val1, val2) => val1
-                .evaluate(cache, context)
-                .wrapping_add(val2.evaluate(cache, context)),
-            EvaluatedOperation::WSub(val1, val2) => val1
-                .evaluate(cache, context)
-                .wrapping_sub(val2.evaluate(cache, context)),
-            EvaluatedOperation::Maj(val1, val2, val3) => AbstractVal::U32(maj(
-                val1.evaluate(cache, context).into(),
-                val2.evaluate(cache, context).into(),
-                val3.evaluate(cache, context).into(),
-            )),
-            EvaluatedOperation::Ch(val1, val2, val3) => AbstractVal::U32(ch(
-                val1.evaluate(cache, context).into(),
-                val2.evaluate(cache, context).into(),
-                val3.evaluate(cache, context).into(),
-            )),
-        }
-    }
+// impl EvaluatedOperation {
+//     pub fn evaluate(
+//         &self,
+//         cache: &mut HashMap<EvaluatedRevVal, AbstractVal>,
+//         context: &Context,
+//     ) -> AbstractVal {
+//         match self {
+//             EvaluatedOperation::BigSigma0(val) => val.evaluate(cache, context).big_sigma0(),
+//             EvaluatedOperation::BigSigma1(val) => val.evaluate(cache, context).big_sigma1(),
+//             EvaluatedOperation::Xor(val1, val2) => todo!(),
+//             EvaluatedOperation::And(val1, val2) => todo!(),
+//             EvaluatedOperation::WAdd(val1, val2) => val1
+//                 .evaluate(cache, context)
+//                 .wrapping_add(val2.evaluate(cache, context)),
+//             EvaluatedOperation::WSub(val1, val2) => val1
+//                 .evaluate(cache, context)
+//                 .wrapping_sub(val2.evaluate(cache, context)),
+//             EvaluatedOperation::Maj(val1, val2, val3) => AbstractVal::U32(maj(
+//                 val1.evaluate(cache, context).into(),
+//                 val2.evaluate(cache, context).into(),
+//                 val3.evaluate(cache, context).into(),
+//             )),
+//             EvaluatedOperation::Ch(val1, val2, val3) => AbstractVal::U32(ch(
+//                 val1.evaluate(cache, context).into(),
+//                 val2.evaluate(cache, context).into(),
+//                 val3.evaluate(cache, context).into(),
+//             )),
+//         }
+//     }
 
-    fn create_mapped(operation: &Operation, mapping: &Mapping) -> Self {
-        match operation {
-            Operation::BigSigma0(val) => {
-                Self::BigSigma0(EvaluatedRevVal::create_lazy_mapped(val, mapping))
-            }
-            Operation::BigSigma1(val) => {
-                Self::BigSigma1(EvaluatedRevVal::create_lazy_mapped(val, mapping))
-            }
-            Operation::Xor(val1, val2) => Self::Xor(
-                EvaluatedRevVal::create_lazy_mapped(val1, mapping),
-                EvaluatedRevVal::create_lazy_mapped(val2, mapping),
-            ),
-            Operation::And(val1, val2) => Self::And(
-                EvaluatedRevVal::create_lazy_mapped(val1, mapping),
-                EvaluatedRevVal::create_lazy_mapped(val2, mapping),
-            ),
-            Operation::WAdd(val1, val2) => Self::WAdd(
-                EvaluatedRevVal::create_lazy_mapped(val1, mapping),
-                EvaluatedRevVal::create_lazy_mapped(val2, mapping),
-            ),
-            Operation::WSub(val1, val2) => Self::WSub(
-                EvaluatedRevVal::create_lazy_mapped(val1, mapping),
-                EvaluatedRevVal::create_lazy_mapped(val2, mapping),
-            ),
-            Operation::Maj(val1, val2, val3) => Self::Maj(
-                EvaluatedRevVal::create_lazy_mapped(val1, mapping),
-                EvaluatedRevVal::create_lazy_mapped(val2, mapping),
-                EvaluatedRevVal::create_lazy_mapped(val3, mapping),
-            ),
-            Operation::Ch(val1, val2, val3) => Self::Ch(
-                EvaluatedRevVal::create_lazy_mapped(val1, mapping),
-                EvaluatedRevVal::create_lazy_mapped(val2, mapping),
-                EvaluatedRevVal::create_lazy_mapped(val3, mapping),
-            ),
-        }
-    }
+//     fn create_mapped(operation: &Operation, mapping: &Mapping) -> Self {
+//         match operation {
+//             Operation::BigSigma0(val) => {
+//                 Self::BigSigma0(EvaluatedRevVal::create_lazy_mapped(val, mapping))
+//             }
+//             Operation::BigSigma1(val) => {
+//                 Self::BigSigma1(EvaluatedRevVal::create_lazy_mapped(val, mapping))
+//             }
+//             Operation::Xor(val1, val2) => Self::Xor(
+//                 EvaluatedRevVal::create_lazy_mapped(val1, mapping),
+//                 EvaluatedRevVal::create_lazy_mapped(val2, mapping),
+//             ),
+//             Operation::And(val1, val2) => Self::And(
+//                 EvaluatedRevVal::create_lazy_mapped(val1, mapping),
+//                 EvaluatedRevVal::create_lazy_mapped(val2, mapping),
+//             ),
+//             Operation::WAdd(val1, val2) => Self::WAdd(
+//                 EvaluatedRevVal::create_lazy_mapped(val1, mapping),
+//                 EvaluatedRevVal::create_lazy_mapped(val2, mapping),
+//             ),
+//             Operation::WSub(val1, val2) => Self::WSub(
+//                 EvaluatedRevVal::create_lazy_mapped(val1, mapping),
+//                 EvaluatedRevVal::create_lazy_mapped(val2, mapping),
+//             ),
+//             Operation::Maj(val1, val2, val3) => Self::Maj(
+//                 EvaluatedRevVal::create_lazy_mapped(val1, mapping),
+//                 EvaluatedRevVal::create_lazy_mapped(val2, mapping),
+//                 EvaluatedRevVal::create_lazy_mapped(val3, mapping),
+//             ),
+//             Operation::Ch(val1, val2, val3) => Self::Ch(
+//                 EvaluatedRevVal::create_lazy_mapped(val1, mapping),
+//                 EvaluatedRevVal::create_lazy_mapped(val2, mapping),
+//                 EvaluatedRevVal::create_lazy_mapped(val3, mapping),
+//             ),
+//         }
+//     }
 
-    fn create(operation: &Operation) -> Self {
-        match operation {
-            Operation::BigSigma0(val) => Self::BigSigma0(EvaluatedRevVal::create_lazy(val)),
-            Operation::BigSigma1(val) => Self::BigSigma1(EvaluatedRevVal::create_lazy(val)),
-            Operation::Xor(val1, val2) => Self::Xor(
-                EvaluatedRevVal::create_lazy(val1),
-                EvaluatedRevVal::create_lazy(val2),
-            ),
-            Operation::And(val1, val2) => Self::And(
-                EvaluatedRevVal::create_lazy(val1),
-                EvaluatedRevVal::create_lazy(val2),
-            ),
-            Operation::WAdd(val1, val2) => Self::WAdd(
-                EvaluatedRevVal::create_lazy(val1),
-                EvaluatedRevVal::create_lazy(val2),
-            ),
-            Operation::WSub(val1, val2) => Self::WSub(
-                EvaluatedRevVal::create_lazy(val1),
-                EvaluatedRevVal::create_lazy(val2),
-            ),
-            Operation::Maj(val1, val2, val3) => Self::Maj(
-                EvaluatedRevVal::create_lazy(val1),
-                EvaluatedRevVal::create_lazy(val2),
-                EvaluatedRevVal::create_lazy(val3),
-            ),
-            Operation::Ch(val1, val2, val3) => Self::Ch(
-                EvaluatedRevVal::create_lazy(val1),
-                EvaluatedRevVal::create_lazy(val2),
-                EvaluatedRevVal::create_lazy(val3),
-            ),
-        }
-    }
-}
+//     fn create(operation: &Operation) -> Self {
+//         match operation {
+//             Operation::BigSigma0(val) => Self::BigSigma0(EvaluatedRevVal::create_lazy(val)),
+//             Operation::BigSigma1(val) => Self::BigSigma1(EvaluatedRevVal::create_lazy(val)),
+//             Operation::Xor(val1, val2) => Self::Xor(
+//                 EvaluatedRevVal::create_lazy(val1),
+//                 EvaluatedRevVal::create_lazy(val2),
+//             ),
+//             Operation::And(val1, val2) => Self::And(
+//                 EvaluatedRevVal::create_lazy(val1),
+//                 EvaluatedRevVal::create_lazy(val2),
+//             ),
+//             Operation::WAdd(val1, val2) => Self::WAdd(
+//                 EvaluatedRevVal::create_lazy(val1),
+//                 EvaluatedRevVal::create_lazy(val2),
+//             ),
+//             Operation::WSub(val1, val2) => Self::WSub(
+//                 EvaluatedRevVal::create_lazy(val1),
+//                 EvaluatedRevVal::create_lazy(val2),
+//             ),
+//             Operation::Maj(val1, val2, val3) => Self::Maj(
+//                 EvaluatedRevVal::create_lazy(val1),
+//                 EvaluatedRevVal::create_lazy(val2),
+//                 EvaluatedRevVal::create_lazy(val3),
+//             ),
+//             Operation::Ch(val1, val2, val3) => Self::Ch(
+//                 EvaluatedRevVal::create_lazy(val1),
+//                 EvaluatedRevVal::create_lazy(val2),
+//                 EvaluatedRevVal::create_lazy(val3),
+//             ),
+//         }
+//     }
+// }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum EvaluatedContextVal {
@@ -216,81 +216,81 @@ pub enum EvaluatedContextVal {
     ArrayCtx(&'static str, Rc<EvaluatedRevVal>),
 }
 
-impl EvaluatedContextVal {
-    fn evaluate(
-        &self,
-        cache: &mut HashMap<EvaluatedRevVal, AbstractVal>,
-        ctx: &Context,
-    ) -> AbstractVal {
-        match self {
-            EvaluatedContextVal::Name(x) => {
-                if let Some(val) = ctx.values.get(*x) {
-                    val.clone()
-                } else {
-                    todo!("{} {}", x, Backtrace::force_capture())
-                }
-            }
-            EvaluatedContextVal::Array(x, i) => {
-                if let Some(val) = ctx.values.get(*x) {
-                    val.to_vec()[*i].clone()
-                } else {
-                    todo!("{} {}", x, Backtrace::force_capture())
-                }
-            }
-            EvaluatedContextVal::ArrayCtx(x, i) => {
-                if let Some(val) = ctx.values.get(*x) {
-                    val.to_vec()[i.evaluate(cache, ctx).to_u32() as usize].clone()
-                } else {
-                    todo!("{} {}", x, Backtrace::force_capture())
-                }
-            }
-        }
-    }
+// impl EvaluatedContextVal {
+//     fn evaluate(
+//         &self,
+//         cache: &mut HashMap<EvaluatedRevVal, AbstractVal>,
+//         ctx: &Context,
+//     ) -> AbstractVal {
+//         match self {
+//             EvaluatedContextVal::Name(x) => {
+//                 if let Some(val) = ctx.values.get(*x) {
+//                     val.clone()
+//                 } else {
+//                     todo!("{} {}", x, Backtrace::force_capture())
+//                 }
+//             }
+//             EvaluatedContextVal::Array(x, i) => {
+//                 if let Some(val) = ctx.values.get(*x) {
+//                     val.to_vec()[*i].clone()
+//                 } else {
+//                     todo!("{} {}", x, Backtrace::force_capture())
+//                 }
+//             }
+//             EvaluatedContextVal::ArrayCtx(x, i) => {
+//                 if let Some(val) = ctx.values.get(*x) {
+//                     val.to_vec()[i.evaluate(cache, ctx).to_u32() as usize].clone()
+//                 } else {
+//                     todo!("{} {}", x, Backtrace::force_capture())
+//                 }
+//             }
+//         }
+//     }
 
-    // we return that because we can map out the entire value
-    fn create_mapped(context_val: &ContextVal, mapping: &Mapping) -> Rc<EvaluatedRevVal> {
-        match context_val {
-            ContextVal::Name(x) => {
-                if let Some(val) = mapping.apply(x) {
-                    EvaluatedRevVal::create_lazy(&val)
-                } else {
-                    EvaluatedRevVal::Context(Self::Name(x).into()).into()
-                }
-            }
-            ContextVal::Array(x, i) => {
-                if let Some(val) = mapping.apply(x) {
-                    todo!()
-                } else {
-                    EvaluatedRevVal::Context(Self::Array(x, *i).into()).into()
-                }
-            }
-            ContextVal::ArrayCtx(x, lazy_rev_val) => {
-                if let Some(val) = mapping.apply(x) {
-                    todo!()
-                } else {
-                    EvaluatedRevVal::Context(
-                        Self::ArrayCtx(
-                            x,
-                            EvaluatedRevVal::create_lazy_mapped(lazy_rev_val, mapping),
-                        )
-                        .into(),
-                    )
-                    .into()
-                }
-            }
-        }
-    }
+//     // we return that because we can map out the entire value
+//     fn create_mapped(context_val: &ContextVal, mapping: &Mapping) -> Rc<EvaluatedRevVal> {
+//         match context_val {
+//             ContextVal::Name(x) => {
+//                 if let Some(val) = mapping.apply(x) {
+//                     EvaluatedRevVal::create_lazy(&val)
+//                 } else {
+//                     EvaluatedRevVal::Context(Self::Name(x).into()).into()
+//                 }
+//             }
+//             ContextVal::Array(x, i) => {
+//                 if let Some(val) = mapping.apply(x) {
+//                     todo!()
+//                 } else {
+//                     EvaluatedRevVal::Context(Self::Array(x, *i).into()).into()
+//                 }
+//             }
+//             ContextVal::ArrayCtx(x, lazy_rev_val) => {
+//                 if let Some(val) = mapping.apply(x) {
+//                     todo!()
+//                 } else {
+//                     EvaluatedRevVal::Context(
+//                         Self::ArrayCtx(
+//                             x,
+//                             EvaluatedRevVal::create_lazy_mapped(lazy_rev_val, mapping),
+//                         )
+//                         .into(),
+//                     )
+//                     .into()
+//                 }
+//             }
+//         }
+//     }
 
-    fn create(context_val: &ContextVal) -> Rc<EvaluatedRevVal> {
-        match context_val {
-            ContextVal::Name(x) => EvaluatedRevVal::Context(Self::Name(x).into()).into(),
-            ContextVal::Array(x, i) => EvaluatedRevVal::Context(Self::Array(x, *i).into()).into(),
-            ContextVal::ArrayCtx(x, val) => {
-                EvaluatedRevVal::Context(Self::ArrayCtx(x, val.into_evaluated()).into()).into()
-            }
-        }
-    }
-}
+//     fn create(context_val: &ContextVal) -> Rc<EvaluatedRevVal> {
+//         match context_val {
+//             ContextVal::Name(x) => EvaluatedRevVal::Context(Self::Name(x).into()).into(),
+//             ContextVal::Array(x, i) => EvaluatedRevVal::Context(Self::Array(x, *i).into()).into(),
+//             ContextVal::ArrayCtx(x, val) => {
+//                 EvaluatedRevVal::Context(Self::ArrayCtx(x, val.into_evaluated()).into()).into()
+//             }
+//         }
+//     }
+// }
 
 /// Public helper -----------------------------------------------------------
 ///

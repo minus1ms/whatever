@@ -1,5 +1,6 @@
 use std::fmt::Debug;
 
+use enum_map::EnumMap;
 use hashbrown::HashMap;
 
 use crate::{
@@ -10,6 +11,7 @@ use crate::{
         rev_big_sigma1, rev_ch, rev_maj, rev_wrapping_add,
     },
     utils::{AbstractVal, RevRes},
+    var::Var,
 };
 
 const K: [u32; 64] = [
@@ -169,26 +171,26 @@ impl PossibleStep {
                     1,
                     Context::new(vec![
                         (
-                            "K",
+                            Var::K,
                             AbstractVal::Arr(K.iter().map(|x| AbstractVal::U32(*x)).collect()),
                         ),
                         (
-                            "w",
+                            Var::W,
                             AbstractVal::Arr(w.iter().map(|x| AbstractVal::U32(*x)).collect()),
                         ),
                         (
-                            "h",
+                            Var::H,
                             AbstractVal::Arr(h.iter().map(|x| AbstractVal::U32(*x)).collect()),
                         ),
-                        ("a", a.into()),
-                        ("b", b.into()),
-                        ("c", c.into()),
-                        ("d", d.into()),
-                        ("e", e.into()),
-                        ("f", f.into()),
-                        ("g", g.into()),
-                        ("h_temp", h_temp.into()),
-                        ("i", (i as u32).into()),
+                        (Var::A, a.into()),
+                        (Var::B, b.into()),
+                        (Var::C, c.into()),
+                        (Var::D, d.into()),
+                        (Var::E, e.into()),
+                        (Var::F, f.into()),
+                        (Var::G, g.into()),
+                        (Var::HTemp, h_temp.into()),
+                        (Var::I, (i as u32).into()),
                     ]),
                 ) {
                     RevRes::Normal(x) => x,
@@ -202,27 +204,27 @@ impl PossibleStep {
                     1,
                     Context::new(vec![
                         (
-                            "h".into(),
+                            Var::H.into(),
                             AbstractVal::Arr(h.iter().map(|x| AbstractVal::U32(*x)).collect()),
                         ),
                         (
-                            "w".into(),
+                            Var::W.into(),
                             AbstractVal::Arr(w.iter().map(|x| AbstractVal::U32(*x)).collect()),
                         ),
                         (
-                            "K".into(),
+                            Var::K.into(),
                             AbstractVal::Arr(K.iter().map(|x| AbstractVal::U32(*x)).collect()),
                         ),
                         // no `a` should be used ever there, should be always mapped out
-                        ("b", b.into()),
-                        ("c", c.into()),
-                        ("d", d.into()),
-                        ("e", e.into()),
-                        ("f", f.into()),
-                        ("g", g.into()),
-                        ("i", (i as u32).into()),
-                        ("h_temp", h_temp.into()),
-                        ("t1", t1.into()),
+                        (Var::B, b.into()),
+                        (Var::C, c.into()),
+                        (Var::D, d.into()),
+                        (Var::E, e.into()),
+                        (Var::F, f.into()),
+                        (Var::G, g.into()),
+                        (Var::I, (i as u32).into()),
+                        (Var::HTemp, h_temp.into()),
+                        (Var::T1, t1.into()),
                     ]),
                 ) {
                     RevRes::Normal(x) => x,
@@ -237,27 +239,27 @@ impl PossibleStep {
                     2,
                     Context::new(vec![
                         (
-                            "K".into(),
+                            Var::K.into(),
                             AbstractVal::Arr(K.iter().map(|x| AbstractVal::U32(*x)).collect()),
                         ),
                         (
-                            "w".into(),
+                            Var::W.into(),
                             AbstractVal::Arr(w.iter().map(|x| AbstractVal::U32(*x)).collect()),
                         ),
                         (
-                            "h".into(),
+                            Var::H.into(),
                             AbstractVal::Arr(h.iter().map(|x| AbstractVal::U32(*x)).collect()),
                         ),
-                        ("a", a.into()),
+                        (Var::A, a.into()),
                         // no `b` should be used ever there, should be always mapped out
-                        ("c", c.into()),
-                        ("d", d.into()),
-                        ("e", e.into()),
-                        ("f", f.into()),
-                        ("g", g.into()),
-                        ("h_temp", h_temp.into()),
-                        ("i", (i as u32).into()),
-                        ("t1", t1.into()),
+                        (Var::C, c.into()),
+                        (Var::D, d.into()),
+                        (Var::E, e.into()),
+                        (Var::F, f.into()),
+                        (Var::G, g.into()),
+                        (Var::HTemp, h_temp.into()),
+                        (Var::I, (i as u32).into()),
+                        (Var::T1, t1.into()),
                     ]),
                 ) {
                     RevRes::Normal(x) => x,
@@ -273,27 +275,27 @@ impl PossibleStep {
                     3,
                     Context::new(vec![
                         (
-                            "K".into(),
+                            Var::K.into(),
                             AbstractVal::Arr(K.iter().map(|x| AbstractVal::U32(*x)).collect()),
                         ),
                         (
-                            "w".into(),
+                            Var::W.into(),
                             AbstractVal::Arr(w.iter().map(|x| AbstractVal::U32(*x)).collect()),
                         ),
                         (
-                            "h".into(),
+                            Var::H.into(),
                             AbstractVal::Arr(h.iter().map(|x| AbstractVal::U32(*x)).collect()),
                         ),
-                        ("a", a.into()),
-                        ("b", b.into()),
+                        (Var::A, a.into()),
+                        (Var::B, b.into()),
                         // no `c` should be used ever there, should be always mapped out
-                        ("d", d.into()),
-                        ("e", e.into()),
-                        ("f", f.into()),
-                        ("g", g.into()),
-                        ("h_temp", h_temp.into()),
-                        ("i", (i as u32).into()),
-                        ("t1", t1.into()),
+                        (Var::D, d.into()),
+                        (Var::E, e.into()),
+                        (Var::F, f.into()),
+                        (Var::G, g.into()),
+                        (Var::HTemp, h_temp.into()),
+                        (Var::I, (i as u32).into()),
+                        (Var::T1, t1.into()),
                     ]),
                 ) {
                     RevRes::Normal(x) => x,
@@ -303,33 +305,33 @@ impl PossibleStep {
                 let (d, _t1) = match rev_wrapping_add(
                     e,
                     None,
-                    Some("t1".into()),
+                    Some(Var::T1.into()),
                     constraints_holder,
                     id.next(4),
                     2,
                     Context::new(vec![
                         (
-                            "K".into(),
+                            Var::K.into(),
                             AbstractVal::Arr(K.iter().map(|x| AbstractVal::U32(*x)).collect()),
                         ),
                         (
-                            "w".into(),
+                            Var::W.into(),
                             AbstractVal::Arr(w.iter().map(|x| AbstractVal::U32(*x)).collect()),
                         ),
                         (
-                            "h".into(),
+                            Var::H.into(),
                             AbstractVal::Arr(h.iter().map(|x| AbstractVal::U32(*x)).collect()),
                         ),
-                        ("a", a.into()),
-                        ("b", b.into()),
-                        ("c", c.into()),
+                        (Var::A, a.into()),
+                        (Var::B, b.into()),
+                        (Var::C, c.into()),
                         // no `d` should be used ever there, should be always mapped out
-                        ("f", f.into()),
-                        ("e", e.into()),
-                        ("g", g.into()),
-                        ("h_temp", h_temp.into()),
-                        ("i", (i as u32).into()),
-                        ("t1", t1.into()),
+                        (Var::F, f.into()),
+                        (Var::E, e.into()),
+                        (Var::G, g.into()),
+                        (Var::HTemp, h_temp.into()),
+                        (Var::I, (i as u32).into()),
+                        (Var::T1, t1.into()),
                     ]),
                 ) {
                     RevRes::Normal(x) => x,
@@ -343,27 +345,27 @@ impl PossibleStep {
                     4,
                     Context::new(vec![
                         (
-                            "K".into(),
+                            Var::K.into(),
                             AbstractVal::Arr(K.iter().map(|x| AbstractVal::U32(*x)).collect()),
                         ),
                         (
-                            "w".into(),
+                            Var::W.into(),
                             AbstractVal::Arr(w.iter().map(|x| AbstractVal::U32(*x)).collect()),
                         ),
                         (
-                            "h".into(),
+                            Var::H.into(),
                             AbstractVal::Arr(h.iter().map(|x| AbstractVal::U32(*x)).collect()),
                         ),
-                        ("a", a.into()),
-                        ("b", b.into()),
-                        ("c", c.into()),
-                        ("d", d.into()),
+                        (Var::A, a.into()),
+                        (Var::B, b.into()),
+                        (Var::C, c.into()),
+                        (Var::D, d.into()),
                         // no `e` should be used ever there, should be always mapped out
-                        ("f", f.into()),
-                        ("g", g.into()),
-                        ("h_temp", h_temp.into()),
-                        ("i", (i as u32).into()),
-                        ("t1", t1.into()),
+                        (Var::F, f.into()),
+                        (Var::G, g.into()),
+                        (Var::HTemp, h_temp.into()),
+                        (Var::I, (i as u32).into()),
+                        (Var::T1, t1.into()),
                     ]),
                 ) {
                     RevRes::Normal(x) => x,
@@ -377,27 +379,27 @@ impl PossibleStep {
                     5,
                     Context::new(vec![
                         (
-                            "K".into(),
+                            Var::K.into(),
                             AbstractVal::Arr(K.iter().map(|x| AbstractVal::U32(*x)).collect()),
                         ),
                         (
-                            "w".into(),
+                            Var::W.into(),
                             AbstractVal::Arr(w.iter().map(|x| AbstractVal::U32(*x)).collect()),
                         ),
                         (
-                            "h".into(),
+                            Var::H.into(),
                             AbstractVal::Arr(h.iter().map(|x| AbstractVal::U32(*x)).collect()),
                         ),
-                        ("a", a.into()),
-                        ("b", b.into()),
-                        ("c", c.into()),
-                        ("d", d.into()),
-                        ("e", e.into()),
+                        (Var::A, a.into()),
+                        (Var::B, b.into()),
+                        (Var::C, c.into()),
+                        (Var::D, d.into()),
+                        (Var::E, e.into()),
                         // no `f` should be used ever there, should be always mapped out
-                        ("g", g.into()),
-                        ("h_temp", h_temp.into()),
-                        ("i", (i as u32).into()),
-                        ("t1", t1.into()),
+                        (Var::G, g.into()),
+                        (Var::HTemp, h_temp.into()),
+                        (Var::I, (i as u32).into()),
+                        (Var::T1, t1.into()),
                     ]),
                 ) {
                     RevRes::Normal(x) => x,
@@ -411,27 +413,27 @@ impl PossibleStep {
                     6,
                     Context::new(vec![
                         (
-                            "K".into(),
+                            Var::K.into(),
                             AbstractVal::Arr(K.iter().map(|x| AbstractVal::U32(*x)).collect()),
                         ),
                         (
-                            "w".into(),
+                            Var::W.into(),
                             AbstractVal::Arr(w.iter().map(|x| AbstractVal::U32(*x)).collect()),
                         ),
                         (
-                            "h".into(),
+                            Var::H.into(),
                             AbstractVal::Arr(h.iter().map(|x| AbstractVal::U32(*x)).collect()),
                         ),
-                        ("a", a.into()),
-                        ("b", b.into()),
-                        ("c", c.into()),
-                        ("d", d.into()),
-                        ("e", e.into()),
-                        ("f", f.into()),
+                        (Var::A, a.into()),
+                        (Var::B, b.into()),
+                        (Var::C, c.into()),
+                        (Var::D, d.into()),
+                        (Var::E, e.into()),
+                        (Var::F, f.into()),
                         // no `g` should be used ever there, should be always mapped out
-                        ("h_temp", h_temp.into()),
-                        ("i", (i as u32).into()),
-                        ("t1", t1.into()),
+                        (Var::HTemp, h_temp.into()),
+                        (Var::I, (i as u32).into()),
+                        (Var::T1, t1.into()),
                     ]),
                 ) {
                     RevRes::Normal(x) => x,
@@ -447,26 +449,26 @@ impl PossibleStep {
                     3,
                     Context::new(vec![
                         (
-                            "K".into(),
+                            Var::K.into(),
                             AbstractVal::Arr(K.iter().map(|x| AbstractVal::U32(*x)).collect()),
                         ),
                         (
-                            "w".into(),
+                            Var::W.into(),
                             AbstractVal::Arr(w.iter().map(|x| AbstractVal::U32(*x)).collect()),
                         ),
                         (
-                            "h".into(),
+                            Var::H.into(),
                             AbstractVal::Arr(h.iter().map(|x| AbstractVal::U32(*x)).collect()),
                         ),
-                        ("i", (i as u32).into()),
-                        ("a".into(), a.into()),
-                        ("b".into(), b.into()),
-                        ("c".into(), c.into()),
-                        ("d".into(), d.into()),
-                        ("e".into(), e.into()),
-                        ("f".into(), f.into()),
-                        ("g".into(), g.into()),
-                        ("h_temp".into(), h_temp.into()),
+                        (Var::I, (i as u32).into()),
+                        (Var::A.into(), a.into()),
+                        (Var::B.into(), b.into()),
+                        (Var::C.into(), c.into()),
+                        (Var::D.into(), d.into()),
+                        (Var::E.into(), e.into()),
+                        (Var::F.into(), f.into()),
+                        (Var::G.into(), g.into()),
+                        (Var::HTemp.into(), h_temp.into()),
                     ]),
                 ) {
                     RevRes::Normal(x) => x,
@@ -491,34 +493,34 @@ impl PossibleStep {
                 let (t1, _w_val) = match rev_wrapping_add(
                     t1,
                     None,
-                    Some(Bytecode::AvLoad("w", i).into()),
+                    Some(Bytecode::AvLoad(Var::W, i).into()),
                     constraints_holder,
                     id.next(11),
                     4,
                     Context::new(vec![
                         (
-                            "K".into(),
+                            Var::K.into(),
                             AbstractVal::Arr(K.iter().map(|x| AbstractVal::U32(*x)).collect()),
                         ),
                         (
-                            "w".into(),
+                            Var::W.into(),
                             AbstractVal::Arr(w.iter().map(|x| AbstractVal::U32(*x)).collect()),
                         ),
                         (
-                            "h".into(),
+                            Var::H.into(),
                             AbstractVal::Arr(h.iter().map(|x| AbstractVal::U32(*x)).collect()),
                         ),
-                        ("i", (i as u32).into()),
-                        ("a".into(), a.into()),
-                        ("b".into(), b.into()),
-                        ("c".into(), c.into()),
-                        ("d".into(), d.into()),
-                        ("e".into(), e.into()),
-                        ("f".into(), f.into()),
-                        ("g".into(), g.into()),
-                        ("h_temp".into(), h_temp.into()),
+                        (Var::I, (i as u32).into()),
+                        (Var::A.into(), a.into()),
+                        (Var::B.into(), b.into()),
+                        (Var::C.into(), c.into()),
+                        (Var::D.into(), d.into()),
+                        (Var::E.into(), e.into()),
+                        (Var::F.into(), f.into()),
+                        (Var::G.into(), g.into()),
+                        (Var::HTemp.into(), h_temp.into()),
                         // use but ALWAYS map when adding constraint there
-                        ("t1".into(), t1.into()),
+                        (Var::T1.into(), t1.into()),
                     ]),
                 ) {
                     RevRes::Normal(x) => x,
@@ -527,34 +529,34 @@ impl PossibleStep {
                 let (t1, _k_val) = match rev_wrapping_add(
                     t1,
                     None,
-                    Some(Bytecode::AvLoad("K", i).into()),
+                    Some(Bytecode::AvLoad(Var::K, i).into()),
                     constraints_holder,
                     id.next(12),
                     5,
                     Context::new(vec![
                         (
-                            "K".into(),
+                            Var::K.into(),
                             AbstractVal::Arr(K.iter().map(|x| AbstractVal::U32(*x)).collect()),
                         ),
                         (
-                            "w".into(),
+                            Var::W.into(),
                             AbstractVal::Arr(w.iter().map(|x| AbstractVal::U32(*x)).collect()),
                         ),
                         (
-                            "h".into(),
+                            Var::H.into(),
                             AbstractVal::Arr(h.iter().map(|x| AbstractVal::U32(*x)).collect()),
                         ),
-                        ("i", (i as u32).into()),
-                        ("a".into(), a.into()),
-                        ("b".into(), b.into()),
-                        ("c".into(), c.into()),
-                        ("d".into(), d.into()),
-                        ("e".into(), e.into()),
-                        ("f".into(), f.into()),
-                        ("g".into(), g.into()),
-                        ("h_temp".into(), h_temp.into()),
+                        (Var::I, (i as u32).into()),
+                        (Var::A.into(), a.into()),
+                        (Var::B.into(), b.into()),
+                        (Var::C.into(), c.into()),
+                        (Var::D.into(), d.into()),
+                        (Var::E.into(), e.into()),
+                        (Var::F.into(), f.into()),
+                        (Var::G.into(), g.into()),
+                        (Var::HTemp.into(), h_temp.into()),
                         // use but ALWAYS map when adding constraint there
-                        ("t1".into(), t1.into()),
+                        (Var::T1.into(), t1.into()),
                     ]),
                 ) {
                     RevRes::Normal(x) => x,
@@ -569,28 +571,28 @@ impl PossibleStep {
                     6,
                     Context::new(vec![
                         (
-                            "K".into(),
+                            Var::K.into(),
                             AbstractVal::Arr(K.iter().map(|x| AbstractVal::U32(*x)).collect()),
                         ),
                         (
-                            "w".into(),
+                            Var::W.into(),
                             AbstractVal::Arr(w.iter().map(|x| AbstractVal::U32(*x)).collect()),
                         ),
                         (
-                            "h".into(),
+                            Var::H.into(),
                             AbstractVal::Arr(h.iter().map(|x| AbstractVal::U32(*x)).collect()),
                         ),
-                        ("i", (i as u32).into()),
-                        ("a".into(), a.into()),
-                        ("b".into(), b.into()),
-                        ("c".into(), c.into()),
-                        ("d".into(), d.into()),
-                        ("e".into(), e.into()),
-                        ("f".into(), f.into()),
-                        ("g".into(), g.into()),
-                        ("h_temp".into(), h_temp.into()),
+                        (Var::I, (i as u32).into()),
+                        (Var::A.into(), a.into()),
+                        (Var::B.into(), b.into()),
+                        (Var::C.into(), c.into()),
+                        (Var::D.into(), d.into()),
+                        (Var::E.into(), e.into()),
+                        (Var::F.into(), f.into()),
+                        (Var::G.into(), g.into()),
+                        (Var::HTemp.into(), h_temp.into()),
                         // use but ALWAYS map when adding constraint there
-                        ("t1".into(), t1.into()),
+                        (Var::T1.into(), t1.into()),
                     ]),
                 ) {
                     RevRes::Normal(x) => x,
@@ -618,28 +620,28 @@ impl PossibleStep {
                     id.next(15),
                     7,
                     Context::new(vec![
-                        ("a".into(), a.into()),
-                        ("b".into(), b.into()),
-                        ("c".into(), c.into()),
-                        ("d".into(), d.into()),
-                        ("e".into(), e.into()),
-                        ("f".into(), f.into()),
-                        ("g".into(), g.into()),
-                        ("h_temp".into(), h_temp.into()),
+                        (Var::A.into(), a.into()),
+                        (Var::B.into(), b.into()),
+                        (Var::C.into(), c.into()),
+                        (Var::D.into(), d.into()),
+                        (Var::E.into(), e.into()),
+                        (Var::F.into(), f.into()),
+                        (Var::G.into(), g.into()),
+                        (Var::HTemp.into(), h_temp.into()),
                         (
-                            "K".into(),
+                            Var::K.into(),
                             AbstractVal::Arr(K.iter().map(|x| AbstractVal::U32(*x)).collect()),
                         ),
                         (
-                            "w".into(),
+                            Var::W.into(),
                             AbstractVal::Arr(w.iter().map(|x| AbstractVal::U32(*x)).collect()),
                         ),
                         (
-                            "h".into(),
+                            Var::H.into(),
                             AbstractVal::Arr(h.iter().map(|x| AbstractVal::U32(*x)).collect()),
                         ),
-                        ("i", (i as u32).into()),
-                        ("t1".into(), t1.into()),
+                        (Var::I, (i as u32).into()),
+                        (Var::T1.into(), t1.into()),
                     ]),
                 ) {
                     RevRes::Normal(x) => x,
@@ -695,7 +697,7 @@ impl PossibleStep {
                         Constraints::Step2(x) => {
                             let constraint = Constraint::Equals(
                                 BytecodeProgram::from_single_code(Bytecode::Input(0)),
-                                BytecodeProgram::from_single_code(Bytecode::AvLoad("h", 7)),
+                                BytecodeProgram::from_single_code(Bytecode::AvLoad(Var::H, 7)),
                             );
                             x.w_add7.to_w_add().constraints.push(constraint);
                             return RevRes::ConstraintsChanged(id);
@@ -823,19 +825,27 @@ impl Default for Step2Constraints {
 
 #[derive(Clone, Debug)]
 pub struct Context {
-    pub values: HashMap<&'static str, AbstractVal>,
+    pub values: EnumMap<Var, Option<AbstractVal>>,
 }
 
 impl Context {
-    pub fn new(values: Vec<(&'static str, AbstractVal)>) -> Self {
+    pub fn new(values: Vec<(Var, AbstractVal)>) -> Self {
         Self {
             values: {
-                let mut res = HashMap::new();
+                let mut res = EnumMap::default();
                 for (name, val) in values {
-                    res.insert(name, val);
+                    res[name] = Some(val);
                 }
                 res
             },
+        }
+    }
+
+    pub fn get(&self, key: Var) -> AbstractVal {
+        if let Some(val) = &self.values[key] {
+            val.clone()
+        } else {
+            todo!("Var not found: {key}")
         }
     }
 }

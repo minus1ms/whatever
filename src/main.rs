@@ -4,6 +4,7 @@ use reverse::RevProc;
 
 mod bytecode;
 mod constraint;
+mod custom_opcode;
 mod evaluated;
 mod helper;
 mod mapping;
@@ -11,9 +12,11 @@ mod rev_fns;
 mod rev_val_holder;
 mod reverse;
 mod sha256;
+mod stack;
 #[cfg(test)]
 mod tests;
 mod utils;
+mod var;
 
 #[cfg(feature = "dhat-heap")]
 #[global_allocator]

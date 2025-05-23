@@ -1,14 +1,18 @@
 // use std::collections::VecDeque; // replaced with Vec
 
+use std::rc::Rc;
+
 use crate::{
-    bytecode::{Bytecode, BytecodeProgram},
+    bytecode::{Bytecode, BytecodeProgram, BytecodeSingleMapping, eval},
     constraint::{
         Constraint, ConstraintId, Constraints, ConstraintsHolder, ContextVal, Operation, RevVal,
     },
+    custom_opcode::OpcodeInterface,
     rev_val_holder::LazyRevVal,
     reverse::Context,
     sha256::{big_sigma0, big_sigma1, ch, maj},
-    utils::RevRes,
+    utils::{AbstractVal, RevRes},
+    var::Var,
 };
 
 static mut COUNTER: usize = 0;
@@ -26,7 +30,7 @@ pub fn rev_big_sigma0(
                     let constraint = Constraint::Equals(
                         BytecodeProgram::from_single_code(Bytecode::Input(0)),
                         BytecodeProgram::from_code(Vec::from([
-                            Bytecode::Context("a"),
+                            Bytecode::Context(Var::A),
                             Bytecode::BigSigma0,
                         ])),
                     );
@@ -63,7 +67,7 @@ pub fn rev_big_sigma1(
                     let constraint = Constraint::Equals(
                         BytecodeProgram::from_single_code(Bytecode::Input(1)),
                         BytecodeProgram::from_code(Vec::from([
-                            Bytecode::Context("e"),
+                            Bytecode::Context(Var::E),
                             Bytecode::BigSigma1,
                         ])),
                     );
@@ -117,23 +121,26 @@ pub fn rev_ch(
                             let constraint = Constraint::Equals(
                                 BytecodeProgram::from_single_code(Bytecode::Input(1)),
                                 BytecodeProgram::from_code(Vec::from([
-                                    Bytecode::Context("e"),
-                                    Bytecode::Context("f"),
-                                    Bytecode::Context("g"),
+                                    Bytecode::Context(Var::E),
+                                    Bytecode::Context(Var::F),
+                                    Bytecode::Context(Var::G),
                                     Bytecode::Ch,
                                 ])),
                             );
                             let t1_1 =
-                                BytecodeProgram::from_single_code(Bytecode::Context("h_temp"))
+                                BytecodeProgram::from_single_code(Bytecode::Context(Var::HTemp))
                                     .extend(
-                                        BytecodeProgram::from_single_code(Bytecode::Context("e"))
-                                            .add(Bytecode::BigSigma1),
+                                        BytecodeProgram::from_single_code(Bytecode::Context(
+                                            Var::E,
+                                        ))
+                                        .add(Bytecode::BigSigma1),
                                     )
                                     .add(Bytecode::WAdd);
-                            let old_t1 = BytecodeProgram::from_single_code(Bytecode::Context("t1"))
-                                .extend(t1_1)
-                                .add(Bytecode::WSub);
-                            let constraint = constraint.map_context(vec![("t1", old_t1)]);
+                            let old_t1 =
+                                BytecodeProgram::from_single_code(Bytecode::Context(Var::T1))
+                                    .extend(t1_1)
+                                    .add(Bytecode::WSub);
+                            let constraint = constraint.map_context(vec![(Var::T1, old_t1)]);
                             unsafe {
                                 static mut COUNTER: usize = 0;
                                 if COUNTER == 64 {
@@ -220,72 +227,155 @@ pub fn rev_assignment(
                 if val.execute(&context).to_u32() != output {
                     match constraints_holder.get(&id.back().back()) {
                         Constraints::Step2(x) => {
-                            let old_d = BytecodeProgram::from_code(Vec::from([
-                                "e".into(),
-                                "t1".into(),
-                                Bytecode::WSub,
-                            ]));
-                            let ch = BytecodeProgram::from_code(Vec::from([
-                                "f".into(),
-                                "g".into(),
-                                "h_temp".into(),
-                                Bytecode::Ch,
-                            ]));
-                            let old_h_temp = BytecodeProgram::from_code(Vec::from([
-                                "t1".into(),
-                                "i".into(),
-                                Bytecode::AvLoadCtx("w"),
-                                Bytecode::WSub,
-                                "i".into(),
-                                Bytecode::AvLoadCtx("K"),
-                                Bytecode::WSub,
-                            ]))
-                            .extend(ch)
-                            .extend(BytecodeProgram::from_code(Vec::from([
-                                Bytecode::WSub,
-                                Bytecode::Context("f"),
-                                Bytecode::BigSigma1,
-                                Bytecode::WSub,
-                            ])));
-                            let prev_iter_t2 = BytecodeProgram::from_code(Vec::from([
-                                "c".into(),
-                                Bytecode::BigSigma0,
-                                "c".into(),
-                                "d".into(),
-                            ]))
-                            .extend(old_d.clone())
-                            .extend(BytecodeProgram::from_code(Vec::from([
-                                Bytecode::Maj,
-                                Bytecode::WAdd,
-                            ])));
-                            let prev_iter_t1 = BytecodeProgram::from_single_code("a".into())
-                                .extend(prev_iter_t2)
-                                .add(Bytecode::WSub);
+                            struct Custom {
+                                val: BytecodeProgram,
+                            }
+                            impl OpcodeInterface for Custom {
+                                fn apply(
+                                    &self,
+                                    ctx: &Context,
+                                    acumulated_mapping: &[BytecodeSingleMapping],
+                                ) -> AbstractVal {
+                                    println!("{:?}", ctx);
+                                    // an example
+                                    // 1. values from initial context and existing mappings
+                                    let h = ctx.get(Var::H);
+                                    let w = ctx.get(Var::W);
+                                    let k = ctx.get(Var::K);
+                                    let a = eval(acumulated_mapping, ctx, Var::A);
+                                    let c = eval(acumulated_mapping, ctx, Var::C);
+                                    let d = eval(acumulated_mapping, ctx, Var::D);
+                                    let e = eval(acumulated_mapping, ctx, Var::E);
+                                    let f = eval(acumulated_mapping, ctx, Var::F);
+                                    let g = eval(acumulated_mapping, ctx, Var::G);
+                                    let h_temp = eval(acumulated_mapping, ctx, Var::HTemp);
+                                    let i = eval(acumulated_mapping, ctx, Var::I).to_u32();
+                                    let t1 = eval(acumulated_mapping, ctx, Var::T1).to_u32();
+
+                                    // 2. values from current mapping
+                                    let old_d = e.to_u32().wrapping_sub(t1);
+                                    let (c, d, e, f, g, h_temp, t1, i) = (
+                                        d.clone(),
+                                        old_d,
+                                        f.clone(),
+                                        g.clone(),
+                                        h_temp.clone(),
+                                        t1.wrapping_sub(w.to_vec()[i as usize].to_u32())
+                                            .wrapping_sub(k.to_vec()[i as usize].to_u32())
+                                            .wrapping_sub(ch(
+                                                f.to_u32(),
+                                                g.to_u32(),
+                                                h_temp.to_u32(),
+                                            ))
+                                            .wrapping_sub(big_sigma1(f.to_u32())),
+                                        a.to_u32().wrapping_sub(
+                                            big_sigma0(c.to_u32()).wrapping_add(maj(
+                                                c.to_u32(),
+                                                d.to_u32(),
+                                                old_d,
+                                            )),
+                                        ),
+                                        i.wrapping_sub(1),
+                                    );
+
+                                    // 3. context construction from values
+                                    let ctx = Context::new(vec![
+                                        (Var::H, h),
+                                        (Var::W, w),
+                                        (Var::K, k),
+                                        (Var::C, c),
+                                        (Var::D, AbstractVal::U32(d)),
+                                        (Var::E, e),
+                                        (Var::F, f),
+                                        (Var::G, g),
+                                        (Var::HTemp, AbstractVal::U32(h_temp)),
+                                        (Var::T1, AbstractVal::U32(t1)),
+                                        (Var::I, AbstractVal::U32(i)),
+                                    ]);
+
+                                    // 4. final program execution using the context
+                                    self.val.execute(&ctx)
+                                }
+                            }
+                            let val = BytecodeProgram::from_single_code(Bytecode::Custom(
+                                Rc::new(Custom { val }),
+                                0,
+                            ));
+
+                            // let old_d = BytecodeProgram::from_code(Vec::from([
+                            //     Var::E.into(),
+                            //     Var::T1.into(),
+                            //     Bytecode::WSub,
+                            // ]));
+                            // let ch = BytecodeProgram::from_code(Vec::from([
+                            //     Var::F.into(),
+                            //     Var::G.into(),
+                            //     Var::HTemp.into(),
+                            //     Bytecode::Ch,
+                            // ]));
+                            // let old_h_temp = BytecodeProgram::from_code(Vec::from([
+                            //     Var::T1.into(),
+                            //     Var::I.into(),
+                            //     Bytecode::AvLoadCtx(Var::W),
+                            //     Bytecode::WSub,
+                            //     Var::I.into(),
+                            //     Bytecode::AvLoadCtx(Var::K),
+                            //     Bytecode::WSub,
+                            // ]))
+                            // .extend(ch)
+                            // .extend(BytecodeProgram::from_code(Vec::from([
+                            //     Bytecode::WSub,
+                            //     Bytecode::Context(Var::F),
+                            //     Bytecode::BigSigma1,
+                            //     Bytecode::WSub,
+                            // ])));
+                            // let prev_iter_t2 = BytecodeProgram::from_code(Vec::from([
+                            //     Var::C.into(),
+                            //     Bytecode::BigSigma0,
+                            //     Var::C.into(),
+                            //     Var::D.into(),
+                            // ]))
+                            // .extend(old_d.clone())
+                            // .extend(BytecodeProgram::from_code(Vec::from([
+                            //     Bytecode::Maj,
+                            //     Bytecode::WAdd,
+                            // ])));
+                            // let prev_iter_t1 = BytecodeProgram::from_single_code(Var::A.into())
+                            //     .extend(prev_iter_t2)
+                            //     .add(Bytecode::WSub);
                             let constraint = Constraint::Equals(
                                 BytecodeProgram::from_single_code(Bytecode::Input(0)),
                                 val,
                             );
-                            let constraint = constraint.map_context(vec![
-                                (
-                                    "i",
-                                    BytecodeProgram::from_code(Vec::from([
-                                        "i".into(),
-                                        Bytecode::Const(1),
-                                        Bytecode::WSub,
-                                    ])),
-                                ),
-                                ("b", "c".into()),
-                                ("c", "d".into()),
-                                ("d", old_d),
-                                ("e", "f".into()),
-                                ("f", "g".into()),
-                                ("g", "h_temp".into()),
-                                ("h_temp", old_h_temp),
-                                ("t1", prev_iter_t1),
-                            ]);
+                            // let constraint = constraint.map_context(vec![
+                            //     (
+                            //         Var::I,
+                            //         BytecodeProgram::from_code(Vec::from([
+                            //             Var::I.into(),
+                            //             Bytecode::Const(1),
+                            //             Bytecode::WSub,
+                            //         ])),
+                            //     ),
+                            //     (Var::B, Var::C.into()),
+                            //     (Var::C, Var::D.into()),
+                            //     (Var::D, old_d),
+                            //     (Var::E, Var::F.into()),
+                            //     (Var::F, Var::G.into()),
+                            //     (Var::G, Var::HTemp.into()),
+                            //     (Var::HTemp, old_h_temp),
+                            //     (Var::T1, prev_iter_t1),
+                            // ]);
                             let Constraints::Ass(ass2) = &mut x.ass2 else {
                                 todo!()
                             };
+                            static mut A_COUNTER: usize = 0;
+                            unsafe {
+                                if A_COUNTER == 1 {
+                                    println!("{constraint}");
+                                    todo!()
+                                }
+                                A_COUNTER += 1;
+                            }
                             ass2.constraints.push(constraint);
                             return RevRes::ConstraintsChanged(id);
                         }
@@ -311,42 +401,42 @@ pub fn rev_assignment(
                     match constraints_holder.get(&id.back().back()) {
                         Constraints::Step2(x) => {
                             let old_d = BytecodeProgram::from_code(Vec::from([
-                                "e".into(),
-                                "t1".into(),
+                                Var::E.into(),
+                                Var::T1.into(),
                                 Bytecode::WSub,
                             ]));
                             let ch = BytecodeProgram::from_code(Vec::from([
-                                "f".into(),
-                                "g".into(),
-                                "h_temp".into(),
+                                Var::F.into(),
+                                Var::G.into(),
+                                Var::HTemp.into(),
                                 Bytecode::Ch,
                             ]));
                             let old_h_temp = BytecodeProgram::from_code(Vec::from([
-                                "t1".into(),
-                                "i".into(),
-                                Bytecode::AvLoadCtx("w"),
+                                Var::T1.into(),
+                                Var::I.into(),
+                                Bytecode::AvLoadCtx(Var::W),
                                 Bytecode::WSub,
-                                "i".into(),
-                                Bytecode::AvLoadCtx("K"),
+                                Var::I.into(),
+                                Bytecode::AvLoadCtx(Var::K),
                                 Bytecode::WSub,
                             ]))
                             .extend(ch)
                             .extend(BytecodeProgram::from_code(Vec::from([
                                 Bytecode::WSub,
-                                Bytecode::Context("f"),
+                                Bytecode::Context(Var::F),
                                 Bytecode::BigSigma1,
                                 Bytecode::WSub,
                             ])));
                             let prev_iter_t2 = BytecodeProgram::from_code(Vec::from([
-                                "b".into(),
+                                Var::B.into(),
                                 Bytecode::BigSigma0,
-                                "b".into(),
-                                "d".into(),
+                                Var::B.into(),
+                                Var::D.into(),
                             ]))
                             .extend(old_d.clone())
                             .add(Bytecode::Maj)
                             .add(Bytecode::WAdd);
-                            let prev_iter_t1 = BytecodeProgram::from_single_code("a".into())
+                            let prev_iter_t1 = BytecodeProgram::from_single_code(Var::A.into())
                                 .extend(prev_iter_t2)
                                 .add(Bytecode::WSub);
                             let constraint = Constraint::Equals(
@@ -355,21 +445,21 @@ pub fn rev_assignment(
                             );
                             let constraint = constraint.map_context(vec![
                                 (
-                                    "i",
+                                    Var::I,
                                     BytecodeProgram::from_code(Vec::from([
-                                        "i".into(),
+                                        Var::I.into(),
                                         Bytecode::Const(1),
                                         Bytecode::WSub,
                                     ])),
                                 ),
-                                ("a", "b".into()),
-                                ("c", "d".into()),
-                                ("d", old_d),
-                                ("e", "f".into()),
-                                ("f", "g".into()),
-                                ("g", "h_temp".into()),
-                                ("h_temp", old_h_temp),
-                                ("t1", prev_iter_t1),
+                                (Var::A, Var::B.into()),
+                                (Var::C, Var::D.into()),
+                                (Var::D, old_d),
+                                (Var::E, Var::F.into()),
+                                (Var::F, Var::G.into()),
+                                (Var::G, Var::HTemp.into()),
+                                (Var::HTemp, old_h_temp),
+                                (Var::T1, prev_iter_t1),
                             ]);
                             let Constraints::Ass(ass3) = &mut x.ass3 else {
                                 todo!()
@@ -399,42 +489,42 @@ pub fn rev_assignment(
                     match constraints_holder.get(&id.back().back()) {
                         Constraints::Step2(x) => {
                             let old_d = BytecodeProgram::from_code(Vec::from([
-                                "e".into(),
-                                "t1".into(),
+                                Var::E.into(),
+                                Var::T1.into(),
                                 Bytecode::WSub,
                             ]));
                             let ch = BytecodeProgram::from_code(Vec::from([
-                                "f".into(),
-                                "g".into(),
-                                "h_temp".into(),
+                                Var::F.into(),
+                                Var::G.into(),
+                                Var::HTemp.into(),
                                 Bytecode::Ch,
                             ]));
                             let old_h_temp = BytecodeProgram::from_code(Vec::from([
-                                "t1".into(),
-                                "i".into(),
-                                Bytecode::AvLoadCtx("w"),
+                                Var::T1.into(),
+                                Var::I.into(),
+                                Bytecode::AvLoadCtx(Var::W),
                                 Bytecode::WSub,
-                                "i".into(),
-                                Bytecode::AvLoadCtx("K"),
+                                Var::I.into(),
+                                Bytecode::AvLoadCtx(Var::K),
                                 Bytecode::WSub,
                             ]))
                             .extend(ch)
                             .extend(BytecodeProgram::from_code(Vec::from([
                                 Bytecode::WSub,
-                                Bytecode::Context("f"),
+                                Bytecode::Context(Var::F),
                                 Bytecode::BigSigma1,
                                 Bytecode::WSub,
                             ])));
                             let prev_iter_t2 = BytecodeProgram::from_code(Vec::from([
-                                "b".into(),
+                                Var::B.into(),
                                 Bytecode::BigSigma0,
-                                "b".into(),
-                                "c".into(),
+                                Var::B.into(),
+                                Var::C.into(),
                             ]))
                             .extend(old_d.clone())
                             .add(Bytecode::Maj)
                             .add(Bytecode::WAdd);
-                            let prev_iter_t1 = BytecodeProgram::from_single_code("a".into())
+                            let prev_iter_t1 = BytecodeProgram::from_single_code(Var::A.into())
                                 .extend(prev_iter_t2)
                                 .add(Bytecode::WSub);
                             let constraint = Constraint::Equals(
@@ -443,29 +533,22 @@ pub fn rev_assignment(
                             );
                             let constraint = constraint.map_context(vec![
                                 (
-                                    "i",
+                                    Var::I,
                                     BytecodeProgram::from_code(Vec::from([
-                                        "i".into(),
+                                        Var::I.into(),
                                         Bytecode::Const(1),
                                         Bytecode::WSub,
                                     ])),
                                 ),
-                                ("a", "b".into()),
-                                ("b", "c".into()),
-                                ("d", old_d),
-                                ("e", "f".into()),
-                                ("f", "g".into()),
-                                ("g", "h_temp".into()),
-                                ("h_temp", old_h_temp),
-                                ("t1", prev_iter_t1),
+                                (Var::A, Var::B.into()),
+                                (Var::B, Var::C.into()),
+                                (Var::D, old_d),
+                                (Var::E, Var::F.into()),
+                                (Var::F, Var::G.into()),
+                                (Var::G, Var::HTemp.into()),
+                                (Var::HTemp, old_h_temp),
+                                (Var::T1, prev_iter_t1),
                             ]);
-                            unsafe {
-                                if COUNTER == 2 {
-                                    // println!("{constraint}");
-                                    std::process::exit(0);
-                                }
-                                COUNTER += 1;
-                            }
                             x.w_add2.to_w_add().constraints.push(constraint);
                             return RevRes::ConstraintsChanged(id);
                         }
@@ -491,39 +574,39 @@ pub fn rev_assignment(
                     match constraints_holder.get(&id.back().back()) {
                         Constraints::Step2(x) => {
                             let prev_iter_t2 = BytecodeProgram::from_code(Vec::from([
-                                "b".into(),
+                                Var::B.into(),
                                 Bytecode::BigSigma0,
-                                "b".into(),
-                                "c".into(),
-                                "d".into(),
+                                Var::B.into(),
+                                Var::C.into(),
+                                Var::D.into(),
                                 Bytecode::Maj,
                                 Bytecode::WAdd,
                             ]));
-                            let prev_iter_t1 = BytecodeProgram::from_single_code("a".into())
+                            let prev_iter_t1 = BytecodeProgram::from_single_code(Var::A.into())
                                 .extend(prev_iter_t2)
                                 .add(Bytecode::WSub);
-                            let old_d = BytecodeProgram::from_single_code("e".into())
+                            let old_d = BytecodeProgram::from_single_code(Var::E.into())
                                 .extend(prev_iter_t1.clone())
                                 .add(Bytecode::WSub);
                             let ch = BytecodeProgram::from_code(Vec::from([
-                                "e".into(),
-                                "g".into(),
-                                "h_temp".into(),
+                                Var::E.into(),
+                                Var::G.into(),
+                                Var::HTemp.into(),
                                 Bytecode::Ch,
                             ]));
                             let old_h_temp = BytecodeProgram::from_code(Vec::from([
-                                "t1".into(),
-                                "i".into(),
-                                Bytecode::AvLoadCtx("w"),
+                                Var::T1.into(),
+                                Var::I.into(),
+                                Bytecode::AvLoadCtx(Var::W),
                                 Bytecode::WSub,
-                                "i".into(),
-                                Bytecode::AvLoadCtx("K"),
+                                Var::I.into(),
+                                Bytecode::AvLoadCtx(Var::K),
                                 Bytecode::WSub,
                             ]))
                             .extend(ch)
                             .extend(BytecodeProgram::from_code(Vec::from([
                                 Bytecode::WSub,
-                                Bytecode::Context("e"),
+                                Bytecode::Context(Var::E),
                                 Bytecode::BigSigma1,
                                 Bytecode::WSub,
                             ])));
@@ -533,21 +616,21 @@ pub fn rev_assignment(
                             );
                             let constraint = constraint.map_context(vec![
                                 (
-                                    "i",
+                                    Var::I,
                                     BytecodeProgram::from_code(Vec::from([
-                                        "i".into(),
+                                        Var::I.into(),
                                         Bytecode::Const(1),
                                         Bytecode::WSub,
                                     ])),
                                 ),
-                                ("a", "b".into()),
-                                ("b", "c".into()),
-                                ("c", "d".into()),
-                                ("d", old_d),
-                                ("f", "g".into()),
-                                ("g", "h_temp".into()),
-                                ("h_temp", old_h_temp),
-                                ("t1", prev_iter_t1),
+                                (Var::A, Var::B.into()),
+                                (Var::B, Var::C.into()),
+                                (Var::C, Var::D.into()),
+                                (Var::D, old_d),
+                                (Var::F, Var::G.into()),
+                                (Var::G, Var::HTemp.into()),
+                                (Var::HTemp, old_h_temp),
+                                (Var::T1, prev_iter_t1),
                             ]);
                             let Constraints::Ass(ass5) = &mut x.ass5 else {
                                 todo!()
@@ -579,39 +662,39 @@ pub fn rev_assignment(
                     match constraints_holder.get(&id.back().back()) {
                         Constraints::Step2(x) => {
                             let prev_iter_t2 = BytecodeProgram::from_code(Vec::from([
-                                "b".into(),
+                                Var::B.into(),
                                 Bytecode::BigSigma0,
-                                "b".into(),
-                                "c".into(),
-                                "d".into(),
+                                Var::B.into(),
+                                Var::C.into(),
+                                Var::D.into(),
                                 Bytecode::Maj,
                                 Bytecode::WAdd,
                             ]));
-                            let prev_iter_t1 = BytecodeProgram::from_single_code("a".into())
+                            let prev_iter_t1 = BytecodeProgram::from_single_code(Var::A.into())
                                 .extend(prev_iter_t2)
                                 .add(Bytecode::WSub);
-                            let old_d = BytecodeProgram::from_single_code("e".into())
+                            let old_d = BytecodeProgram::from_single_code(Var::E.into())
                                 .extend(prev_iter_t1.clone())
                                 .add(Bytecode::WSub);
                             let ch = BytecodeProgram::from_code(Vec::from([
-                                "e".into(),
-                                "f".into(),
-                                "h_temp".into(),
+                                Var::E.into(),
+                                Var::F.into(),
+                                Var::HTemp.into(),
                                 Bytecode::Ch,
                             ]));
                             let old_h_temp = BytecodeProgram::from_code(Vec::from([
-                                "t1".into(),
-                                "i".into(),
-                                Bytecode::AvLoadCtx("w"),
+                                Var::T1.into(),
+                                Var::I.into(),
+                                Bytecode::AvLoadCtx(Var::W),
                                 Bytecode::WSub,
-                                "i".into(),
-                                Bytecode::AvLoadCtx("K"),
+                                Var::I.into(),
+                                Bytecode::AvLoadCtx(Var::K),
                                 Bytecode::WSub,
                             ]))
                             .extend(ch)
                             .extend(BytecodeProgram::from_code(Vec::from([
                                 Bytecode::WSub,
-                                Bytecode::Context("e"),
+                                Bytecode::Context(Var::E),
                                 Bytecode::BigSigma1,
                                 Bytecode::WSub,
                             ])));
@@ -621,25 +704,41 @@ pub fn rev_assignment(
                             );
                             let constraint = constraint.map_context(vec![
                                 (
-                                    "i",
+                                    Var::I,
                                     BytecodeProgram::from_code(Vec::from([
-                                        "i".into(),
+                                        Var::I.into(),
                                         Bytecode::Const(1),
                                         Bytecode::WSub,
                                     ])),
                                 ),
-                                ("a", "b".into()),
-                                ("b", "c".into()),
-                                ("c", "d".into()),
-                                ("d", old_d),
-                                ("e", "f".into()),
-                                ("g", "h_temp".into()),
-                                ("h_temp", old_h_temp),
-                                ("t1", prev_iter_t1),
+                                (Var::A, Var::B.into()),
+                                (Var::B, Var::C.into()),
+                                (Var::C, Var::D.into()),
+                                (Var::D, old_d),
+                                (Var::E, Var::F.into()),
+                                (Var::G, Var::HTemp.into()),
+                                (Var::HTemp, old_h_temp),
+                                (Var::T1, prev_iter_t1),
                             ]);
                             let Constraints::Ass(ass6) = &mut x.ass6 else {
                                 todo!()
                             };
+                            unsafe {
+                                if COUNTER == 2 {
+                                    // println!("{constraint}");
+                                    println!(
+                                        "{}",
+                                        match constraint {
+                                            Constraint::Equals(
+                                                bytecode_program,
+                                                bytecode_program1,
+                                            ) => bytecode_program1.code.len(),
+                                        }
+                                    );
+                                    std::process::exit(0);
+                                }
+                                COUNTER += 1;
+                            }
                             ass6.constraints.push(constraint);
                             return RevRes::ConstraintsChanged(id);
                         }
@@ -664,25 +763,25 @@ pub fn rev_assignment(
                     match constraints_holder.get(&id.back().back()) {
                         Constraints::Step2(x) => {
                             let prev_iter_t2 = BytecodeProgram::from_code(Vec::from([
-                                "b".into(),
+                                Var::B.into(),
                                 Bytecode::BigSigma0,
-                                "b".into(),
-                                "c".into(),
-                                "d".into(),
+                                Var::B.into(),
+                                Var::C.into(),
+                                Var::D.into(),
                                 Bytecode::Maj,
                                 Bytecode::WAdd,
                             ]));
-                            let prev_iter_t1 = BytecodeProgram::from_single_code("a".into())
+                            let prev_iter_t1 = BytecodeProgram::from_single_code(Var::A.into())
                                 .extend(prev_iter_t2)
                                 .add(Bytecode::WSub);
-                            let old_d = BytecodeProgram::from_single_code("e".into())
+                            let old_d = BytecodeProgram::from_single_code(Var::E.into())
                                 .extend(prev_iter_t1.clone())
                                 .add(Bytecode::WSub);
                             let big_sigma1 = BytecodeProgram::from_code(Vec::from([
-                                "e".into(),
+                                Var::E.into(),
                                 Bytecode::BigSigma1,
                             ]));
-                            let old_h_temp = BytecodeProgram::from_single_code("t1".into())
+                            let old_h_temp = BytecodeProgram::from_single_code(Var::T1.into())
                                 .extend(big_sigma1.clone())
                                 .add(Bytecode::WSub);
                             let constraint = Constraint::Equals(
@@ -691,21 +790,21 @@ pub fn rev_assignment(
                             );
                             let constraint = constraint.map_context(vec![
                                 (
-                                    "i",
+                                    Var::I,
                                     BytecodeProgram::from_code(Vec::from([
-                                        "i".into(),
+                                        Var::I.into(),
                                         Bytecode::Const(1),
                                         Bytecode::WSub,
                                     ])),
                                 ),
-                                ("a", "b".into()),
-                                ("b", "c".into()),
-                                ("c", "d".into()),
-                                ("d", old_d),
-                                ("e", "f".into()),
-                                ("f", "g".into()),
-                                ("h_temp", old_h_temp),
-                                ("t1", prev_iter_t1),
+                                (Var::A, Var::B.into()),
+                                (Var::B, Var::C.into()),
+                                (Var::C, Var::D.into()),
+                                (Var::D, old_d),
+                                (Var::E, Var::F.into()),
+                                (Var::F, Var::G.into()),
+                                (Var::HTemp, old_h_temp),
+                                (Var::T1, prev_iter_t1),
                             ]);
                             x.w_add7.to_w_add().constraints.push(constraint);
                             return RevRes::ConstraintsChanged(id);
@@ -763,65 +862,64 @@ pub fn rev_wrapping_add(
                                             BytecodeProgram::from_single_code(Bytecode::Input(0)),
                                             val1.clone().extend(raw_second_in).add(Bytecode::WAdd),
                                         );
-                                        let prev_iter_t2 =
-                                            BytecodeProgram::from_code(Vec::from([
-                                                "b".into(),
-                                                Bytecode::BigSigma0,
-                                                "b".into(),
-                                                "c".into(),
-                                                "d".into(),
-                                                Bytecode::Maj,
-                                                Bytecode::WAdd,
-                                            ]));
+                                        let prev_iter_t2 = BytecodeProgram::from_code(Vec::from([
+                                            Var::B.into(),
+                                            Bytecode::BigSigma0,
+                                            Var::B.into(),
+                                            Var::C.into(),
+                                            Var::D.into(),
+                                            Bytecode::Maj,
+                                            Bytecode::WAdd,
+                                        ]));
                                         let prev_iter_t1 =
-                                            BytecodeProgram::from_single_code("a".into())
+                                            BytecodeProgram::from_single_code(Var::A.into())
                                                 .extend(prev_iter_t2)
                                                 .add(Bytecode::WSub);
-                                        let old_d = BytecodeProgram::from_single_code("f".into())
-                                            .extend(prev_iter_t1.clone())
-                                            .add(Bytecode::WSub);
+                                        let old_d =
+                                            BytecodeProgram::from_single_code(Var::F.into())
+                                                .extend(prev_iter_t1.clone())
+                                                .add(Bytecode::WSub);
                                         let ch = BytecodeProgram::from_code(Vec::from([
-                                            "f".into(),
-                                            "g".into(),
-                                            "h_temp".into(),
+                                            Var::F.into(),
+                                            Var::G.into(),
+                                            Var::HTemp.into(),
                                             Bytecode::Ch,
                                         ]));
                                         let old_t1 = BytecodeProgram::from_code(Vec::from([
-                                            "t1".into(),
-                                            "i".into(),
-                                            Bytecode::AvLoadCtx("w"),
+                                            Var::T1.into(),
+                                            Var::I.into(),
+                                            Bytecode::AvLoadCtx(Var::W),
                                             Bytecode::WSub,
-                                            "i".into(),
-                                            Bytecode::AvLoadCtx("K"),
+                                            Var::I.into(),
+                                            Bytecode::AvLoadCtx(Var::K),
                                             Bytecode::WSub,
                                         ]))
                                         .extend(ch)
                                         .add(Bytecode::WSub);
-                                        let big_sigma1 =
-                                            BytecodeProgram::from_code(Vec::from([
-                                                "f".into(),
-                                                Bytecode::BigSigma1,
-                                            ]));
+                                        let big_sigma1 = BytecodeProgram::from_code(Vec::from([
+                                            Var::F.into(),
+                                            Bytecode::BigSigma1,
+                                        ]));
                                         let old_h_temp =
                                             old_t1.extend(big_sigma1).add(Bytecode::WSub);
                                         let constraint = constraint.map_context(vec![
-                                            ("a", "b".into()),
-                                            ("b", "c".into()),
-                                            ("c", "d".into()),
-                                            ("d", old_d),
-                                            ("f", "g".into()),
-                                            ("e", "f".into()),
-                                            ("g", "h_temp".into()),
-                                            ("h_temp", old_h_temp),
+                                            (Var::A, Var::B.into()),
+                                            (Var::B, Var::C.into()),
+                                            (Var::C, Var::D.into()),
+                                            (Var::D, old_d),
+                                            (Var::F, Var::G.into()),
+                                            (Var::E, Var::F.into()),
+                                            (Var::G, Var::HTemp.into()),
+                                            (Var::HTemp, old_h_temp),
                                             (
-                                                "i",
+                                                Var::I,
                                                 BytecodeProgram::from_code(Vec::from([
-                                                    "i".into(),
+                                                    Var::I.into(),
                                                     Bytecode::Const(1),
                                                     Bytecode::WSub,
                                                 ])),
                                             ),
-                                            ("t1", prev_iter_t1),
+                                            (Var::T1, prev_iter_t1),
                                         ]);
                                         let Constraints::Ass(ass4) = &mut x.ass4 else {
                                             todo!()
@@ -853,59 +951,59 @@ pub fn rev_wrapping_add(
                                 match constraints_holder.get(&id.back()) {
                                     Constraints::Step2(x) => {
                                         let ch = BytecodeProgram::from_code(Vec::from([
-                                            "f".into(),
-                                            "g".into(),
-                                            "h_temp".into(),
+                                            Var::F.into(),
+                                            Var::G.into(),
+                                            Var::HTemp.into(),
                                             Bytecode::Ch,
                                         ]));
                                         let t2 = BytecodeProgram::from_code(Vec::from([
-                                            "b".into(),
+                                            Var::B.into(),
                                             Bytecode::BigSigma0,
-                                            "b".into(),
-                                            "c".into(),
-                                            "d".into(),
+                                            Var::B.into(),
+                                            Var::C.into(),
+                                            Var::D.into(),
                                             Bytecode::Maj,
                                             Bytecode::WAdd,
                                         ]));
-                                        let t1_4 = BytecodeProgram::from_single_code("a".into())
+                                        let t1_4 = BytecodeProgram::from_single_code(Var::A.into())
                                             .extend(t2)
                                             .add(Bytecode::WSub);
                                         let t1_1 = t1_4
                                             .clone()
                                             .extend(BytecodeProgram::from_code(Vec::from([
-                                                "i".into(),
-                                                Bytecode::AvLoadCtx("w"),
+                                                Var::I.into(),
+                                                Bytecode::AvLoadCtx(Var::W),
                                                 Bytecode::WSub,
-                                                "i".into(),
-                                                Bytecode::AvLoadCtx("K"),
+                                                Var::I.into(),
+                                                Bytecode::AvLoadCtx(Var::K),
                                                 Bytecode::WSub,
                                             ])))
                                             .extend(ch)
                                             .add(Bytecode::WSub);
-                                        let big_sigma1 =
-                                            BytecodeProgram::from_code(Vec::from([
-                                                "f".into(),
-                                                Bytecode::BigSigma1,
-                                            ]));
+                                        let big_sigma1 = BytecodeProgram::from_code(Vec::from([
+                                            Var::F.into(),
+                                            Bytecode::BigSigma1,
+                                        ]));
                                         let old_h_temp =
                                             t1_1.extend(big_sigma1).add(Bytecode::WSub);
-                                        let old_d = BytecodeProgram::from_single_code("e".into())
-                                            .extend(t1_4.clone())
-                                            .add(Bytecode::WSub);
+                                        let old_d =
+                                            BytecodeProgram::from_single_code(Var::E.into())
+                                                .extend(t1_4.clone())
+                                                .add(Bytecode::WSub);
                                         let constraint = Constraint::Equals(
                                             BytecodeProgram::from_single_code(Bytecode::Input(0)),
                                             val1.extend(raw_second_in).add(Bytecode::WAdd),
                                         )
                                         .map_context(vec![
-                                            ("a", "b".into()),
-                                            ("b", "c".into()),
-                                            ("c", "d".into()),
-                                            ("d", old_d),
-                                            ("e", "f".into()),
-                                            ("f", "g".into()),
-                                            ("g", "h_temp".into()),
-                                            ("h_temp", old_h_temp),
-                                            ("t1", t1_4),
+                                            (Var::A, Var::B.into()),
+                                            (Var::B, Var::C.into()),
+                                            (Var::C, Var::D.into()),
+                                            (Var::D, old_d),
+                                            (Var::E, Var::F.into()),
+                                            (Var::F, Var::G.into()),
+                                            (Var::G, Var::HTemp.into()),
+                                            (Var::HTemp, old_h_temp),
+                                            (Var::T1, t1_4),
                                         ]);
                                         x.w_add1.to_w_add().constraints.push(constraint);
                                         return RevRes::ConstraintsChanged(id);
@@ -938,12 +1036,13 @@ pub fn rev_wrapping_add(
                                             val1.extend(raw_second_in).add(Bytecode::WAdd),
                                         );
                                         let t1_3 = BytecodeProgram::from_code(Vec::from([
-                                            "t1".into(),
-                                            "i".into(),
-                                            Bytecode::AvLoadCtx("w"),
+                                            Var::T1.into(),
+                                            Var::I.into(),
+                                            Bytecode::AvLoadCtx(Var::W),
                                             Bytecode::WSub,
                                         ]));
-                                        let constraint = constraint.map_context(vec![("t1", t1_3)]);
+                                        let constraint =
+                                            constraint.map_context(vec![(Var::T1, t1_3)]);
                                         x.w_add4.to_w_add().constraints.push(constraint);
                                         return RevRes::ConstraintsChanged(id);
                                     }
@@ -1002,29 +1101,29 @@ pub fn rev_wrapping_add(
                             match constraints_holder.get(&id.back().back()) {
                                 Constraints::Step2(x) => {
                                     let old_d = BytecodeProgram::from_code(Vec::from([
-                                        "e".into(),
-                                        "t1".into(),
+                                        Var::E.into(),
+                                        Var::T1.into(),
                                         Bytecode::WSub,
                                     ]));
                                     let ch = BytecodeProgram::from_code(Vec::from([
-                                        "f".into(),
-                                        "g".into(),
-                                        "h_temp".into(),
+                                        Var::F.into(),
+                                        Var::G.into(),
+                                        Var::HTemp.into(),
                                         Bytecode::Ch,
                                     ]));
                                     let old_t1 = BytecodeProgram::from_code(Vec::from([
-                                        "t1".into(),
-                                        "i".into(),
-                                        Bytecode::AvLoadCtx("w"),
+                                        Var::T1.into(),
+                                        Var::I.into(),
+                                        Bytecode::AvLoadCtx(Var::W),
                                         Bytecode::WSub,
-                                        "i".into(),
-                                        Bytecode::AvLoadCtx("K"),
+                                        Var::I.into(),
+                                        Bytecode::AvLoadCtx(Var::K),
                                         Bytecode::WSub,
                                     ]))
                                     .extend(ch)
                                     .add(Bytecode::WSub);
                                     let big_sigma1 = BytecodeProgram::from_code(Vec::from([
-                                        "f".into(),
+                                        Var::F.into(),
                                         Bytecode::BigSigma1,
                                     ]));
                                     let old_h_temp = old_t1.extend(big_sigma1).add(Bytecode::WSub);
@@ -1034,18 +1133,18 @@ pub fn rev_wrapping_add(
                                     );
 
                                     let constraint = constraint.map_context(vec![
-                                        ("a", "b".into()),
-                                        ("b", "c".into()),
-                                        ("c", "d".into()),
-                                        ("d", old_d),
-                                        ("e", "f".into()),
-                                        ("f", "g".into()),
-                                        ("g", "h_temp".into()),
-                                        ("h_temp", old_h_temp),
+                                        (Var::A, Var::B.into()),
+                                        (Var::B, Var::C.into()),
+                                        (Var::C, Var::D.into()),
+                                        (Var::D, old_d),
+                                        (Var::E, Var::F.into()),
+                                        (Var::F, Var::G.into()),
+                                        (Var::G, Var::HTemp.into()),
+                                        (Var::HTemp, old_h_temp),
                                         (
-                                            "i",
+                                            Var::I,
                                             BytecodeProgram::from_code(Vec::from([
-                                                "i".into(),
+                                                Var::I.into(),
                                                 Bytecode::Const(1),
                                                 Bytecode::WSub,
                                             ])),
@@ -1108,28 +1207,28 @@ pub fn rev_wrapping_add(
                                         val1.extend(val2).add(Bytecode::WAdd),
                                     );
                                     let t2 = BytecodeProgram::from_code(Vec::from([
-                                        "b".into(),
+                                        Var::B.into(),
                                         Bytecode::BigSigma0,
-                                        "b".into(),
-                                        "c".into(),
-                                        "d".into(),
+                                        Var::B.into(),
+                                        Var::C.into(),
+                                        Var::D.into(),
                                         Bytecode::Maj,
                                         Bytecode::WAdd,
                                     ]));
-                                    let t1_4 = BytecodeProgram::from_single_code("a".into())
+                                    let t1_4 = BytecodeProgram::from_single_code(Var::A.into())
                                         .extend(t2)
                                         .add(Bytecode::WSub);
-                                    let old_d = BytecodeProgram::from_single_code("e".into())
+                                    let old_d = BytecodeProgram::from_single_code(Var::E.into())
                                         .extend(t1_4)
                                         .add(Bytecode::WSub);
                                     let constraint = constraint.map_context(vec![
-                                        ("a", "b".into()),
-                                        ("b", "c".into()),
-                                        ("c", "d".into()),
-                                        ("d", old_d),
-                                        ("e", "f".into()),
-                                        ("f", "g".into()),
-                                        ("g", "h_temp".into()),
+                                        (Var::A, Var::B.into()),
+                                        (Var::B, Var::C.into()),
+                                        (Var::C, Var::D.into()),
+                                        (Var::D, old_d),
+                                        (Var::E, Var::F.into()),
+                                        (Var::F, Var::G.into()),
+                                        (Var::G, Var::HTemp.into()),
                                     ]);
                                     x.w_add1.to_w_add().constraints.push(constraint);
                                     return RevRes::ConstraintsChanged(id);
@@ -1188,12 +1287,12 @@ pub fn rev_wrapping_add(
                                         val1.extend(val2).add(Bytecode::WAdd),
                                     );
                                     let t1_2 = BytecodeProgram::from_code(Vec::from([
-                                        "t1".into(),
-                                        "i".into(),
-                                        Bytecode::AvLoadCtx("K".into()),
+                                        Var::T1.into(),
+                                        Var::I.into(),
+                                        Bytecode::AvLoadCtx(Var::K.into()),
                                         Bytecode::WSub,
                                     ]));
-                                    let constraint = constraint.map_context(vec![("t1", t1_2)]);
+                                    let constraint = constraint.map_context(vec![(Var::T1, t1_2)]);
                                     x.w_add5.to_w_add().constraints.push(constraint);
                                     return RevRes::ConstraintsChanged(id);
                                 }
@@ -1246,15 +1345,16 @@ pub fn rev_wrapping_add(
                                         val1.extend(val2).add(Bytecode::WAdd),
                                     );
                                     let ch = BytecodeProgram::from_code(Vec::from([
-                                        "e".into(),
-                                        "f".into(),
-                                        "g".into(),
+                                        Var::E.into(),
+                                        Var::F.into(),
+                                        Var::G.into(),
                                         Bytecode::Ch,
                                     ]));
-                                    let old_t1 = BytecodeProgram::from_single_code("t1".into())
+                                    let old_t1 = BytecodeProgram::from_single_code(Var::T1.into())
                                         .extend(ch)
                                         .add(Bytecode::WSub);
-                                    let constraint = constraint.map_context(vec![("t1", old_t1)]);
+                                    let constraint =
+                                        constraint.map_context(vec![(Var::T1, old_t1)]);
                                     x.w_add6.to_w_add().constraints.push(constraint);
                                     return RevRes::ConstraintsChanged(id);
                                 }
@@ -1299,9 +1399,9 @@ pub fn rev_maj(
                             let constraint = Constraint::Equals(
                                 Bytecode::Input(1).into(),
                                 BytecodeProgram::from_code(Vec::from([
-                                    Bytecode::Context("a"),
-                                    Bytecode::Context("b"),
-                                    Bytecode::Context("c"),
+                                    Bytecode::Context(Var::A),
+                                    Bytecode::Context(Var::B),
+                                    Bytecode::Context(Var::C),
                                     Bytecode::Maj,
                                 ])),
                             );
@@ -1338,7 +1438,7 @@ pub fn rev_maj(
         Some(z),
         constraints_holder,
         id.next(3),
-        Context::new(vec![("y".into(), y.into())]),
+        Context::new(vec![(Var::Y, y.into())]),
         2,
     ) else {
         return RevRes::ConstraintsChanged(id);
@@ -1411,8 +1511,8 @@ pub fn rev_and(
                             let constraint = Constraint::Equals(
                                 Bytecode::Input(0).into(),
                                 BytecodeProgram::from_code(Vec::from([
-                                    Bytecode::Context("x"),
-                                    Bytecode::Context("y"),
+                                    Bytecode::Context(Var::X),
+                                    Bytecode::Context(Var::Y),
                                     Bytecode::And,
                                 ])),
                             );

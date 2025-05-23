@@ -13,6 +13,7 @@ dhat-heap = [] # if you are doing heap profiling
 
 [dependencies]
 dhat = "0.3.3"
+enum-map = "2.7.3"
 hashbrown = "0.15.3"
 indexmap = "2.9.0"
 inkwell = { version = "0.6.0", features = ["llvm18-1"] }
